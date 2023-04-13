@@ -5,25 +5,17 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.LineUnavailableException;
 
-import java.awt.BasicStroke;
 import java.awt.image.RenderedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.nio.channels.FileLock;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.lang.Thread;
-import java.nio.channels.FileChannel;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
-import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -77,7 +69,7 @@ public class fxClock extends Application {
     static final Integer WINDOW_ICON_PNG_WIDTH = 96;
 
 
-    static enum APPSTATE {
+    enum APPSTATE {
         NEVER_ACTIVE("NEVER_ACTIVE"),
         ALARM_NOT_SET("ALARM_NOT_SET"),
 
@@ -88,7 +80,7 @@ public class fxClock extends Application {
 
         private final String stateString;
 
-        private APPSTATE(String saveAs) {
+        APPSTATE(String saveAs) {
             this.stateString = saveAs;
         }
 
@@ -104,7 +96,7 @@ public class fxClock extends Application {
         private static final Map<String, APPSTATE> mAppStateMap =
             buildMap();
 
-        private static final APPSTATE appStateValueOf(String name) {
+        private static APPSTATE appStateValueOf(String name) {
             return mAppStateMap.get(name);
         }
 
@@ -136,7 +128,7 @@ public class fxClock extends Application {
     static final LocalDateTimeStringConverter LDT_STRING_CONVERTER =
         new LocalDateTimeStringConverter();
 
-    static final String MONTH_NAMES[] = {
+    static final String[] MONTH_NAMES = {
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
@@ -186,6 +178,9 @@ public class fxClock extends Application {
 
 
     // Class Global stubs.
+    static final Timer mSecondTimer = new Timer();
+    static final Preferences mPref = Preferences.userRoot().node(WINDOW_TITLE);
+
     Stage mStage;
     Image mStageAppIcon;
 
@@ -203,9 +198,6 @@ public class fxClock extends Application {
     HBox mActionBox;
     Button mOkButton;
     Button mCancelButton;
-
-    Timer mSecondTimer = new Timer();
-    Preferences mPref = Preferences.userRoot().node(WINDOW_TITLE);
 
     AudioInputStream CLIP_SOUND_FOR_APP;
     Clip mClip;
