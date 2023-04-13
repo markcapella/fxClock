@@ -115,16 +115,18 @@ public class fxClock extends Application {
 
     static final String ALARM_VALUE_PREFNAME = "Alarm_Value";
 
+    static final String WINDOW_ONTOP_PREFNAME   = "Window_OnTop";
     static final String WINDOW_POS_X_PREFNAME   = "Window_Position_X";
     static final String WINDOW_POS_Y_PREFNAME   = "Window_Position_Y";
     static final String WINDOW_WIDTH_PREFNAME   = "Window_Width";
     static final String WINDOW_HEIGHT_PREFNAME  = "Window_Height";
     static final String APP_STATE_PREFNAME      = "App_State";
 
-    static final double WINDOW_DEFAULT_X = 200;
-    static final double WINDOW_DEFAULT_Y = 200;
-    static final double WINDOW_DEFAULT_WIDTH = 380;
-    static final double WINDOW_DEFAULT_HEIGHT = 400;
+    static final Boolean WINDOW_ONTOP_DEFAULT = false;
+    static final Double WINDOW_DEFAULT_X = 200.0;
+    static final Double WINDOW_DEFAULT_Y = 200.0;
+    static final Double WINDOW_DEFAULT_WIDTH = 380.0;
+    static final Double WINDOW_DEFAULT_HEIGHT = 400.0;
     static final APPSTATE APP_STATE_DEFAULT = APPSTATE.ALARM_NOT_SET;
 
     static final Double TIME_LABEL_FONT_SIZE = 32.0;
@@ -240,6 +242,7 @@ public class fxClock extends Application {
 
         // Set window titlebar title & icon.
         mStage.setTitle(WINDOW_TITLE);
+        mStage.setAlwaysOnTop(getWindowOnTopValue());
         createWindowIcon();
         setWindowIcon();
 
@@ -297,6 +300,8 @@ public class fxClock extends Application {
         if (getAppState() == APPSTATE.SETTING_ALARM) {
             setAlarmValue(mAlarmPicker.getDateTimeValue());
         }
+
+        setWindowOnTopValue(mStage.isAlwaysOnTop());
     }
 
     /** *********************************************************************
@@ -524,6 +529,19 @@ public class fxClock extends Application {
     /** *********************************************************************
      * Helper methods ... all Preferences getter / setters.
      */
+    public Boolean getWindowOnTopValue() {
+        System.out.println("fxClock: getWindowOnTopValue() Starts.");
+        Boolean r = mPref.getBoolean(WINDOW_ONTOP_PREFNAME, WINDOW_ONTOP_DEFAULT);
+        System.out.println("fxClock: getWindowOnTopValue(" + r + ") Finishes.");
+        return r;
+    }
+
+    public void setWindowOnTopValue(Boolean onTopValue) {
+        System.out.println("fxClock: setWindowOnTopValue() Starts.");
+        mPref.putBoolean(WINDOW_ONTOP_PREFNAME, onTopValue);
+        System.out.println("fxClock: setWindowOnTopValue(" + onTopValue + ") Finishes.");
+    }
+
     public LocalDateTime getAlarmValue() {
         // System.out.println("fxClock: getAlarmValue() Starts.");
         LocalDateTime r = getLDTFromString(
