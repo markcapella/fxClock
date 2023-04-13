@@ -50,6 +50,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.converter.LocalDateTimeStringConverter;
 
+
 // *********************************************************************
 // *** fxClock JavaFX Application                                    ***
 // *********************************************************************
@@ -194,7 +195,7 @@ public class fxClock extends Application {
     Button mAlarmButton;
 
     VBox mAlarmEditBox;
-    DateTimePicker mAlarmPicker;
+    LocalDateTimePicker mAlarmPicker;
     HBox mActionBox;
     Button mOkButton;
     Button mCancelButton;
@@ -290,7 +291,7 @@ public class fxClock extends Application {
         setWindowHeight(mStage.getHeight());
 
         if (getAppState() == APPSTATE.SETTING_ALARM) {
-            setAlarmValue(mAlarmPicker.getDateTimeValue());
+            setAlarmValue(mAlarmPicker.getLocalDateTime());
         }
 
         setWindowOnTopValue(mStage.isAlwaysOnTop());
@@ -309,6 +310,7 @@ public class fxClock extends Application {
         mTimeLabel = new Label(getNNWithLeadZero(ldt.getHour()) + ":" +
             getNNWithLeadZero(ldt.getMinute()) + " ");
         mTimeLabel.setFont(new Font(TIME_LABEL_FONT_SIZE));
+
         mTimeDateBox.getChildren().add(mTimeLabel);
         mDateLabel = new Label(MONTH_NAMES[ldt.getMonthValue() - 1] + " " +
             getNNWithLeadZero(ldt.getDayOfMonth()));
@@ -361,9 +363,7 @@ public class fxClock extends Application {
         });
 
         // Picker node.
-        mAlarmPicker = new DateTimePicker();
-        mAlarmPicker.setMaxHeight(26);
-        mAlarmPicker.setStyle("-fx-font-size: 18pt;");
+        mAlarmPicker = new LocalDateTimePicker();
 
         // Ok button.
         mOkButton = new Button();
@@ -381,7 +381,7 @@ public class fxClock extends Application {
         mOkButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override public void handle(ActionEvent event) {
                 setAppAndPrevState(APPSTATE.ALARM_SET);
-                setAlarmValue(mAlarmPicker.getDateTimeValue());
+                setAlarmValue(mAlarmPicker.getLocalDateTime());
                 updateStageScene();
             }
         });
@@ -444,7 +444,7 @@ public class fxClock extends Application {
             mAlarmButton.setManaged(false);
             mAlarmEditBox.setVisible(true);
             mAlarmEditBox.setManaged(true);
-            mAlarmPicker.setDateTimeValue(getAlarmValue());
+            mAlarmPicker.setLocalDateTime(getAlarmValue());
 
         } else if (getAppState() == APPSTATE.ALARM_SET) {
             mAlarmButton.setVisible(true);
@@ -498,7 +498,7 @@ public class fxClock extends Application {
             mAlarmButton.setManaged(false);
             mAlarmEditBox.setVisible(true);
             mAlarmEditBox.setManaged(true);
-            mAlarmPicker.setDateTimeValue(getAlarmValue());
+            mAlarmPicker.setLocalDateTime(getAlarmValue());
 
         } else if (getAppState() == APPSTATE.ALARM_SET) {
             mAlarmButton.setVisible(true);

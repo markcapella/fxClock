@@ -20,9 +20,14 @@ fxClock: fxClock.java
 		exit 1; \
 	fi
 
-	$(JCOMPILER) $(JFLAGS) fxClock.java DateTimePicker.java
+	$(JCOMPILER) $(JFLAGS) fxClock.java LocalDateTimePicker.java LocalDateTimePickerSkin.java CalendarPicker.java DateTimeToCalendarHelper.java CalendarPickerControlSkin.java \
+		CssMetaDataForSkinProperty.java SimpleDateFormatConverter.java CalendarPickerControlSkin.java CalendarTimePicker.java CalendarTimePickerSkin.java \
+		GridPane.java NodeUtil.java CalendarPickerMonthlySkinAbstract.java GenericLayoutConstraints.java ListSpinner.java ListSpinnerSkin.java \
+		Timer.java HBox.java VBox.java
+		
 
 	@echo "Build Done !"
+	@echo
 
 # ****************************************************
 # Target needed to run the executable from the source folder
@@ -38,6 +43,7 @@ run: fxClock
 	$(JRUNTIME) $(JFLAGS) fxClock
 
 	@echo "Run Done !"
+	@echo
 
 # ****************************************************
 # Target needed to install the executable to user .local
@@ -48,11 +54,14 @@ install: fxClock
 	for FILE in $$(pgrep java) ; do \
 		ps -p $$FILE -o args --no-headers | egrep fxClock && kill $$FILE; \
 	done
+	@echo ""
 
 	rm -rf ~/.local/fxClock
 	mkdir ~/.local/fxClock
 
 	cp *.class ~/.local/fxClock
+	cp *.css ~/.local/fxClock
+
 	cp 'okButton.png' ~/.local/fxClock
 	cp 'cancelButton.png' ~/.local/fxClock
 	cp 'alarmBeep.wav' ~/.local/fxClock
@@ -64,6 +73,7 @@ install: fxClock
 	rm -rf ~/.java/.userPrefs/fxClock
 
 	@echo "Install Done !"
+	@echo
 
 # ****************************************************
 # Target needed to uninstall the executable from user .local
@@ -73,6 +83,7 @@ uninstall:
 	for FILE in $$(pgrep java) ; do \
 		ps -p $$FILE -o args --no-headers | egrep fxClock && kill $$FILE; \
 	done
+	@echo ""
 
 	rm -rf ~/.local/fxClock
 
@@ -83,6 +94,7 @@ uninstall:
 	rm -rf ~/.java/.userPrefs/fxClock
 
 	@echo "Uninstall Done !"
+	@echo
 
 # ****************************************************
 # Target needed to clean the source folder for a fresh make
@@ -96,3 +108,4 @@ clean:
 	rm -rf ~/.java/.userPrefs/fxClock
 
 	@echo "Clean Done !"
+	@echo
