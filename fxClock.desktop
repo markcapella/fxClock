@@ -1,9 +1,13 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=fxClock
-Type=Application
-Terminal=no
 
-Path=~/.local/fxClock
+Path=/usr/local/fxClock
 Exec=java --module-path /snap/openjfx/current/sdk/lib/ --add-modules javafx.controls,javafx.swing fxClock
-Icon=fxClock.desktop.png
+Icon=fxClock
+
+Terminal=false
+Type=Application
+StartupNotify=true
+
+OnlyShowIn=GNOME;Unity;Pantheon;KDE;
+Categories=GNOME;GTK;Utility;

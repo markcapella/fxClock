@@ -49,28 +49,32 @@ run: fxClock
 # Target needed to install the executable to user .local
 
 install: fxClock
-	# Kill any active instances. Installed and run-from-dev folder conflict
-	# over shared ~/.java.userPrefs.
-	for FILE in $$(pgrep java) ; do \
-		ps -p $$FILE -o args --no-headers | egrep fxClock && kill $$FILE; \
-	done
-	@echo ""
+ifneq ($(shell id -u), 0)
+	@echo "You must be root to perform this action. Please re-run with:"
+	@echo "   sudo make install"
+	@echo
+	@exit 1;
+endif
 
-	rm -rf ~/.local/fxClock
-	mkdir ~/.local/fxClock
+	@echo
+	@echo "sudo make install: starts ..."
 
-	cp *.class ~/.local/fxClock
-	cp *.css ~/.local/fxClock
+	mkdir -p /usr/local/fxClock
 
-	cp 'okButton.png' ~/.local/fxClock
-	cp 'cancelButton.png' ~/.local/fxClock
-	cp 'alarmBeep.wav' ~/.local/fxClock
+	cp *.class /usr/local/fxClock
+	cp *.css /usr/local/fxClock
 
-	cp 'fxClock.desktop' ~/Desktop
+	cp 'okButton.png' /usr/local/fxClock
+	cp 'cancelButton.png' /usr/local/fxClock
+	cp 'alarmBeep.wav' /usr/local/fxClock
 
-	cp 'fxClock.desktop.png' ~/.local/share/icons/hicolor/48x48/apps/
+	cp 'fxClock.desktop' /usr/share/applications/
+	cp 'fxClock.png' /usr/local/share/icons/hicolor/48x48/apps/
 
-	rm -rf ~/.java/.userPrefs/fxClock
+	sudo -u ${SUDO_USER} \
+		mkdir -p /home/${SUDO_USER}/.local/fxClock
+	sudo -u ${SUDO_USER} \
+		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
 
 	@echo "Install Done !"
 	@echo
@@ -79,19 +83,25 @@ install: fxClock
 # Target needed to uninstall the executable from user .local
 
 uninstall:
-	# Kill any active instances.
-	for FILE in $$(pgrep java) ; do \
-		ps -p $$FILE -o args --no-headers | egrep fxClock && kill $$FILE; \
-	done
-	@echo ""
+ifneq ($(shell id -u), 0)
+	@echo "You must be root to perform this action. Please re-run with:"
+	@echo "   sudo make uninstall"
+	@echo
+	@exit 1;
+endif
 
-	rm -rf ~/.local/fxClock
+	@echo
+	@echo "sudo make uninstall: starts ..."
 
-	rm -f ~/Desktop/fxClock.desktop
+	rm -rf /usr/local/fxClock
 
-	rm -f ~/.local/share/icons/hicolor/48x48/apps/fxClock.desktop.png
+	rm -f /usr/share/applications/fxClock.desktop
+	rm -f /usr/local/share/icons/hicolor/48x48/apps/fxClock.png
 
-	rm -rf ~/.java/.userPrefs/fxClock
+	sudo -u ${SUDO_USER} \
+		rm -rf /home/${SUDO_USER}/.local/fxClock
+	sudo -u ${SUDO_USER} \
+		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
 
 	@echo "Uninstall Done !"
 	@echo

@@ -5,11 +5,13 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.LineUnavailableException;
 
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.nio.channels.FileLock;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -58,11 +60,13 @@ import javafx.util.converter.LocalDateTimeStringConverter;
 public class fxClock extends Application {
     // All app static finals.
     static final String WINDOW_TITLE = "fxClock";
-    static final String WINDOW_INSTANCE_LOCKFILE = "fxClock.instancelock";
 
-    static final String WINDOW_ICON_PNG = "fxClockGenerated.png";
+    static final String WINDOW_ICON_PNG = System.getenv("HOME") +
+        "/.local/fxClock/fxClock.png";
+    static final String WINDOW_INSTANCE_LOCKFILE = System.getenv("HOME") +
+        "/.local/fxClock/fxClock.instancelock";
+
     static final String ALARM_SOUND_FOR_APP = "alarmBeep.wav";
-    static final String TMP_DIR_FOR_APP = "/tmp/fxClock";
     static final String OK_BUTTON_PNG = "okButton.png";
     static final String CANCEL_BUTTON_PNG = "cancelButton.png";
 
@@ -236,6 +240,7 @@ public class fxClock extends Application {
         // Set window titlebar title & icon.
         mStage.setTitle(WINDOW_TITLE);
         mStage.setAlwaysOnTop(getWindowOnTopValue());
+
         createWindowIcon();
         setWindowIcon();
 
@@ -522,101 +527,65 @@ public class fxClock extends Application {
      * Helper methods ... all Preferences getter / setters.
      */
     public Boolean getWindowOnTopValue() {
-        System.out.println("fxClock: getWindowOnTopValue() Starts.");
-        Boolean r = mPref.getBoolean(WINDOW_ONTOP_PREFNAME, WINDOW_ONTOP_DEFAULT);
-        System.out.println("fxClock: getWindowOnTopValue(" + r + ") Finishes.");
-        return r;
+        return mPref.getBoolean(WINDOW_ONTOP_PREFNAME, WINDOW_ONTOP_DEFAULT);
     }
 
     public void setWindowOnTopValue(Boolean onTopValue) {
-        System.out.println("fxClock: setWindowOnTopValue() Starts.");
         mPref.putBoolean(WINDOW_ONTOP_PREFNAME, onTopValue);
-        System.out.println("fxClock: setWindowOnTopValue(" + onTopValue + ") Finishes.");
     }
 
     public LocalDateTime getAlarmValue() {
-        // System.out.println("fxClock: getAlarmValue() Starts.");
-        LocalDateTime r = getLDTFromString(
-            mPref.get(ALARM_VALUE_PREFNAME, getStringFromLDT(LocalDateTime.now())));
-        // System.out.println("fxClock: getAlarmValue(" + getStringFromLDT(r) + ") Finishes.");
-        return r;
+        return getLDTFromString(mPref.get(ALARM_VALUE_PREFNAME,
+            getStringFromLDT(LocalDateTime.now())));
     }
 
     public void setAlarmValue(LocalDateTime alarmValue) {
-        // System.out.println("fxClock: setAlarmValue() Starts.");
         mPref.put(ALARM_VALUE_PREFNAME, getStringFromLDT(alarmValue));
-        // System.out.println("fxClock: setAlarmValue(" + getStringFromLDT(alarmValue) + ") Finishes.");
     }
 
     public void removeAlarmValue() {
-        // System.out.println("fxClock: removeAlarmValue() Starts.");
         mPref.remove(ALARM_VALUE_PREFNAME);
-        // System.out.println("fxClock: removeAlarmValue() Finishes.");
     }
 
     public APPSTATE getAppState() {
-        //System.out.println("fxClock: getAppState() Starts.");
-        APPSTATE r = APPSTATE.appStateValueOf(
-            mPref.get(APP_STATE_PREFNAME, APP_STATE_DEFAULT.getStringValue()));
-        //System.out.println("fxClock: getAppState(" + r.getStringValue() + ") Finishes.");
-        return r;
+        return APPSTATE.appStateValueOf(mPref.get(APP_STATE_PREFNAME,
+            APP_STATE_DEFAULT.getStringValue()));
     }
 
     public void setAppAndPrevState(APPSTATE state) {
-        //System.out.println("fxClock: setAppAndPrevState(" + state.getStringValue() + ").");
         mPref.put(APP_STATE_PREFNAME, state.getStringValue());
     }
 
     public Double getWindowPosX() {
-        // System.out.println("fxClock: getWindowPosX Starts.");
-        final Double r = mPref.getDouble(WINDOW_POS_X_PREFNAME, WINDOW_DEFAULT_X);
-        // System.out.println("fxClock: getWindowPosX(" + r + ") Finishes.");
-        return r;
+        return mPref.getDouble(WINDOW_POS_X_PREFNAME, WINDOW_DEFAULT_X);
     }
 
     public void setWindowPosX(Double x) {
-        // System.out.println("fxClock: setWindowPosX() Starts.");
         mPref.putDouble(WINDOW_POS_X_PREFNAME, x);
-        // System.out.println("fxClock: setWindowPosX(" + x + ") Finishes.");
     }
 
     public Double getWindowPosY() {
-        // System.out.println("fxClock: getWindowPosY Starts.");
-        final Double r = mPref.getDouble(WINDOW_POS_Y_PREFNAME, WINDOW_DEFAULT_Y);
-        // System.out.println("fxClock: getWindowPosY(" + r + ") Finishes.");
-        return r;
+        return mPref.getDouble(WINDOW_POS_Y_PREFNAME, WINDOW_DEFAULT_Y);
     }
 
     public void setWindowPosY(Double y) {
-        // System.out.println("fxClock: setWindowPosY() Starts.");
         mPref.putDouble(WINDOW_POS_Y_PREFNAME, y);
-        // System.out.println("fxClock: setWindowPosY(" + y + ") Finishes.");
     }
 
     public Double getWindowWidth() {
-        // System.out.println("fxClock: getWindowWidth Starts.");
-        final Double r = mPref.getDouble(WINDOW_WIDTH_PREFNAME, WINDOW_DEFAULT_WIDTH);
-        // System.out.println("fxClock: getWindowWidth(" + r + ") Finishes.");
-        return r;
+        return mPref.getDouble(WINDOW_WIDTH_PREFNAME, WINDOW_DEFAULT_WIDTH);
     }
 
     public void setWindowWidth(Double w) {
-        // System.out.println("fxClock: setWindowWidth() Starts.");
         mPref.putDouble(WINDOW_WIDTH_PREFNAME, w);
-        // System.out.println("fxClock: setWindowWidth(" + w + ") Finishes.");
     }
 
     public Double getWindowHeight() {
-        // System.out.println("fxClock: getWindowHeight Starts.");
-        final Double r = mPref.getDouble(WINDOW_HEIGHT_PREFNAME, WINDOW_DEFAULT_HEIGHT);
-        // System.out.println("fxClock: getWindowHeight(" + r + ") Finishes.");
-        return r;
+        return mPref.getDouble(WINDOW_HEIGHT_PREFNAME, WINDOW_DEFAULT_HEIGHT);
     }
 
     public void setWindowHeight(Double h) {
-        // System.out.println("fxClock: setWindowHeight() Starts.");
         mPref.putDouble(WINDOW_HEIGHT_PREFNAME, h);
-        // System.out.println("fxClock: setWindowHeight(" + h + ") Finishes.");
     }
 
     /** *********************************************************************
@@ -734,8 +703,9 @@ public class fxClock extends Application {
             final RenderedImage renderedImage =
                 SwingFXUtils.fromFXImage(writableImage, null);
             ImageIO.write(renderedImage, "png", new File(WINDOW_ICON_PNG));
-        } catch (IOException ex) {
-            System.out.println("fxClock: createWindowIcon() Creating window icon fails.");
+        } catch (IOException e) {
+            System.out.println("fxClock: createWindowIcon() Creating window" +
+                " icon fails: " + WINDOW_ICON_PNG + e);
         }
     }
 
@@ -748,11 +718,11 @@ public class fxClock extends Application {
             if (mStageAppIcon != null) {
                 mStage.getIcons().remove(mStageAppIcon);
             }
-            mStageAppIcon = new Image(getClass().
-                getResourceAsStream(WINDOW_ICON_PNG));
+            mStageAppIcon = new Image(new FileInputStream(WINDOW_ICON_PNG));
             mStage.getIcons().add(mStageAppIcon);
         } catch (Exception e) {
-            System.out.println("fxClock: setWindowIcon() Setting window icon fails.");
+            System.out.println("fxClock: setWindowIcon() Setting window" +
+                " icon fails: " + WINDOW_ICON_PNG + e);
         }
     }
 }

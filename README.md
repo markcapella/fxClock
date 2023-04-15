@@ -9,7 +9,7 @@
 
 ## Description
 
-###    A minimally sized java FX app, digital clock for Linux Plasma, with a beeping alarm.
+###    A minimally sized java FX app, digital clock for Linux, with a beeping alarm.
 
 
 ## Installation
@@ -18,14 +18,16 @@
 
     make
     make run
-    make install
-    make uninstall
+
+    sudo make install
+    sudo make uninstall
+
     make clean
 
 
 ## Usage
 
-    Double click the icon that's added to your desktop.
+    Find and click the icon that's added to your systems menu.
 
 
 ### markcapella@twcny.rr.com Rocks !
