@@ -62,7 +62,7 @@ public class fxClock extends Application {
     static final String WINDOW_TITLE = "fxClock";
 
     static final String WINDOW_ICON_PNG = System.getenv("HOME") +
-        "/.local/fxClock/fxClock.png";
+        "/.local/fxClock/fxClockGenerated.png";
     static final String WINDOW_INSTANCE_LOCKFILE = System.getenv("HOME") +
         "/.local/fxClock/fxClock.instancelock";
 

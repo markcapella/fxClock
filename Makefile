@@ -68,8 +68,8 @@ endif
 	cp 'cancelButton.png' /usr/local/fxClock
 	cp 'alarmBeep.wav' /usr/local/fxClock
 
-	cp 'fxClock.desktop' /usr/share/applications/
-	cp 'fxClock.png' /usr/local/share/icons/hicolor/48x48/apps/
+	cp 'fxclock.desktop' /usr/share/applications/
+	cp 'fxclock.png' /usr/share/icons/hicolor/48x48/apps/
 
 	sudo -u ${SUDO_USER} \
 		mkdir -p /home/${SUDO_USER}/.local/fxClock
@@ -95,8 +95,8 @@ endif
 
 	rm -rf /usr/local/fxClock
 
-	rm -f /usr/share/applications/fxClock.desktop
-	rm -f /usr/local/share/icons/hicolor/48x48/apps/fxClock.png
+	rm -f /usr/share/applications/fxclock.desktop
+	rm -f /usr/share/icons/hicolor/48x48/apps/fxclock.png
 
 	sudo -u ${SUDO_USER} \
 		rm -rf /home/${SUDO_USER}/.local/fxClock
