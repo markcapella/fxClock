@@ -1,4 +1,5 @@
 import javax.imageio.ImageIO;
+
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -61,8 +62,6 @@ public class fxClock extends Application {
     // All app static finals.
     static final String WINDOW_TITLE = "fxClock";
 
-    static final String WINDOW_ICON_PNG = System.getenv("HOME") +
-        "/.local/fxClock/fxClockGenerated.png";
     static final String WINDOW_INSTANCE_LOCKFILE = System.getenv("HOME") +
         "/.local/fxClock/fxClock.instancelock";
 
@@ -73,6 +72,10 @@ public class fxClock extends Application {
     static final Integer WINDOW_ICON_PNG_HEIGHT = 96;
     static final Integer WINDOW_ICON_PNG_WIDTH = 96;
 
+    static final Integer GNOME_ICON_HEIGHT = 24;
+    static final Integer GNOME_ICON_WIDTH = 24;
+    static final Insets GNOME_IMAGE_MARGIN_INSETS =
+        new Insets(1, 10, 1, 1);
 
     enum APPSTATE {
         NEVER_ACTIVE("NEVER_ACTIVE"),
@@ -187,12 +190,15 @@ public class fxClock extends Application {
     static final Preferences mPref = Preferences.userRoot().node(WINDOW_TITLE);
 
     Stage mStage;
-    Image mStageAppIcon;
+
+    BufferedImage mBufferedStageIcon;
+    Image mStageIcon;
 
     Scene mScene;
     VBox mSceneBox;
 
     HBox mTimeDateBox;
+    ImageView mGnomeImageView;
     Label mTimeLabel;
     Label mDateLabel;
 
@@ -220,11 +226,13 @@ public class fxClock extends Application {
                 new RandomAccessFile(new File(WINDOW_INSTANCE_LOCKFILE), "rw");
             final FileLock fileLock = randomAccessFile.getChannel().tryLock();
             if (fileLock == null) {
-                System.out.println("fxClock: start() Fails. Only one active application allowed.");
+                System.out.println(
+                    "fxClock: start() Fails. Only one active application allowed.");
                 Platform.exit();
             }
         } catch (IOException e) {
-            System.out.println("fxClock: start() Fails. LOCKFILE can\'t be created.");
+            System.out.println(
+                "fxClock: start() Fails. LOCKFILE can\'t be created.");
             Platform.exit();
         }
 
@@ -233,8 +241,10 @@ public class fxClock extends Application {
                 new File(ALARM_SOUND_FOR_APP));
             mClip = AudioSystem.getClip();
             mClip.open(CLIP_SOUND_FOR_APP);
-        } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
-            System.out.println("fxClock: start() Alarm beep audio sound is unavailable.");
+        } catch (IOException | LineUnavailableException |
+                 UnsupportedAudioFileException e) {
+            System.out.println(
+                "fxClock: start() Alarm beep audio sound is unavailable.");
         }
 
         // Set window titlebar title & icon.
@@ -312,11 +322,22 @@ public class fxClock extends Application {
 
         mTimeDateBox = new HBox();
         mTimeDateBox.setAlignment(Pos.CENTER);
+
+        // Add Icon to Window contents as GNOME doesn't use it in the titlebar.
+        if (System.getenv("XDG_SESSION_DESKTOP").contains("GNOME")) {
+            mGnomeImageView = new ImageView(mStageIcon);
+            HBox.setMargin(mGnomeImageView, GNOME_IMAGE_MARGIN_INSETS);
+            mGnomeImageView.setPreserveRatio(true);
+            mGnomeImageView.setFitWidth(GNOME_ICON_WIDTH);
+            mGnomeImageView.setFitHeight(GNOME_ICON_HEIGHT);
+            mTimeDateBox.getChildren().add(mGnomeImageView);
+        }
+
         mTimeLabel = new Label(getNNWithLeadZero(ldt.getHour()) + ":" +
             getNNWithLeadZero(ldt.getMinute()) + " ");
         mTimeLabel.setFont(new Font(TIME_LABEL_FONT_SIZE));
-
         mTimeDateBox.getChildren().add(mTimeLabel);
+
         mDateLabel = new Label(MONTH_NAMES[ldt.getMonthValue() - 1] + " " +
             getNNWithLeadZero(ldt.getDayOfMonth()));
         mDateLabel.setFont(new Font(DATE_LABEL_FONT_SIZE));
@@ -377,9 +398,11 @@ public class fxClock extends Application {
         // Ok button image.
         try {
             mOkButton.setGraphic(new ImageView(new Image(
-                getClass().getResourceAsStream(OK_BUTTON_PNG), 24, 24, false, false)));
+                getClass().getResourceAsStream(OK_BUTTON_PNG),
+                    24, 24, false, false)));
         } catch (Exception e) {
-            System.out.println("fxClock: initStageScene() okButton image load fails.");
+            System.out.println(
+                "fxClock: initStageScene() okButton image load fails.");
         }
 
         // Ok button actions.
@@ -398,9 +421,11 @@ public class fxClock extends Application {
         // Cancel button image.
         try {
             mCancelButton.setGraphic(new ImageView(new Image(
-                getClass().getResourceAsStream(CANCEL_BUTTON_PNG), 24, 24, false, false)));
+                getClass().getResourceAsStream(CANCEL_BUTTON_PNG),
+                    24, 24, false, false)));
         } catch (Exception e) {
-            System.out.println("fxClock: initStageScene() cancelButton image load fails.");
+            System.out.println(
+                "fxClock: initStageScene() cancelButton image load fails.");
         }
 
         // Cancel button actions.
@@ -477,6 +502,17 @@ public class fxClock extends Application {
         // HBox for display of Current Time and Current Date.
         final LocalDateTime ldt = LocalDateTime.ofInstant(
             Instant.now(), ZoneId.systemDefault());
+
+        // Add Icon to Window contents as GNOME doesn't use it in the titlebar.
+        if (System.getenv("XDG_SESSION_DESKTOP").contains("GNOME")) {
+            mTimeDateBox.getChildren().remove(mGnomeImageView);
+            mGnomeImageView = new ImageView(mStageIcon);
+            HBox.setMargin(mGnomeImageView, GNOME_IMAGE_MARGIN_INSETS);
+            mGnomeImageView.setPreserveRatio(true);
+            mGnomeImageView.setFitWidth(GNOME_ICON_WIDTH);
+            mGnomeImageView.setFitHeight(GNOME_ICON_HEIGHT);
+            mTimeDateBox.getChildren().add(mGnomeImageView);
+        }
 
         mTimeDateBox.getChildren().remove(mTimeLabel);
         mTimeLabel = new Label(getNNWithLeadZero(ldt.getHour()) + ":" +
@@ -628,7 +664,7 @@ public class fxClock extends Application {
     }
 
     /** *********************************************************************
-     * Creates resource of clock face with current time as .png file.
+     * Creates resource of clock face with current time.
      */
     public void createWindowIcon() {
         final Canvas canvas = new Canvas(
@@ -693,36 +729,35 @@ public class fxClock extends Application {
         gc.setFill(Color.BLUE);
         gc.fillOval(46, 46, 4, 4);
 
-        // Save clockFace as png file.
-        try {
-            final SnapshotParameters snapParms = new SnapshotParameters();
-            snapParms.setFill(Color.TRANSPARENT);
-            final WritableImage writableImage = new WritableImage(
-                WINDOW_ICON_PNG_WIDTH, WINDOW_ICON_PNG_HEIGHT);
-            canvas.snapshot(snapParms, writableImage);
-            final RenderedImage renderedImage =
-                SwingFXUtils.fromFXImage(writableImage, null);
-            ImageIO.write(renderedImage, "png", new File(WINDOW_ICON_PNG));
-        } catch (IOException e) {
-            System.out.println("fxClock: createWindowIcon() Creating window" +
-                " icon fails: " + WINDOW_ICON_PNG + e);
-        }
+        // Save clockFace as global.
+        final SnapshotParameters snapParms = new SnapshotParameters();
+        snapParms.setFill(Color.TRANSPARENT);
+
+        final WritableImage writableImage = new WritableImage(
+            WINDOW_ICON_PNG_WIDTH, WINDOW_ICON_PNG_HEIGHT);
+        canvas.snapshot(snapParms, writableImage);
+
+        mBufferedStageIcon =
+            SwingFXUtils.fromFXImage((Image) writableImage, null);
     }
 
     /** *********************************************************************
-     * Helper method, reloads Window Icon from file where we've
-     * Created resource of clock face with current time as .png file.
+     * Helper method, loads Window Icon from where we've
+     * Created resource of clock face with current time.
      */
     public void setWindowIcon() {
+        // Remove one we previously set.
+        if (mStageIcon != null) {
+            mStage.getIcons().remove(mStageIcon);
+        }
+
+        // Set the new one.
         try {
-            if (mStageAppIcon != null) {
-                mStage.getIcons().remove(mStageAppIcon);
-            }
-            mStageAppIcon = new Image(new FileInputStream(WINDOW_ICON_PNG));
-            mStage.getIcons().add(mStageAppIcon);
+            mStageIcon = SwingFXUtils.toFXImage(mBufferedStageIcon, null);
+            mStage.getIcons().add(mStageIcon);
         } catch (Exception e) {
-            System.out.println("fxClock: setWindowIcon() Setting window" +
-                " icon fails: " + WINDOW_ICON_PNG + e);
+            System.out.println(
+                "fxClock: setWindowIcon() Setting window icon fails: \n" + e);
         }
     }
 }
