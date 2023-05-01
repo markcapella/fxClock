@@ -10,8 +10,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileLock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -59,9 +57,6 @@ import javafx.util.converter.LocalDateTimeStringConverter;
 public class fxClock extends Application {
     // All app static finals.
     static final String WINDOW_TITLE = "fxClock";
-
-    static final String WINDOW_INSTANCE_LOCKFILE = System.getenv("HOME") +
-        "/.local/fxClock/fxClock.instancelock";
 
     static final String ALARM_SOUND_FOR_APP = "alarmBeep.wav";
     static final String OK_BUTTON_PNG = "okButton.png";
@@ -221,21 +216,6 @@ public class fxClock extends Application {
     @Override
     public void start(Stage stage) {
         mApplication = stage;
-
-        try {
-            final RandomAccessFile randomAccessFile =
-                new RandomAccessFile(new File(WINDOW_INSTANCE_LOCKFILE), "rw");
-            final FileLock fileLock = randomAccessFile.getChannel().tryLock();
-            if (fileLock == null) {
-                System.out.println(
-                    "fxClock: start() Fails. Only one active application allowed.");
-                Platform.exit();
-            }
-        } catch (IOException e) {
-            System.out.println(
-                "fxClock: start() Fails. LOCKFILE can\'t be created.");
-            Platform.exit();
-        }
 
         // Load audio clip for alarm.
         try {
