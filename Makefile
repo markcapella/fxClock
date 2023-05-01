@@ -1,6 +1,6 @@
 
 # *****************************************************
-# Variables to control Makefile operation
+# Variables to control Makefile operation.
 
 JCOMPILER = javac
 JFLAGS = \
@@ -10,7 +10,7 @@ JFLAGS = \
 JRUNTIME = java
 
 # ****************************************************
-# Targets needed to build the executable from the source folder
+# Targets needed to build the executable from the source folder.
 
 fxClock: fxClock.java
 	@if [ ! -d "/snap/openjfx/current" ]; then \
@@ -30,7 +30,7 @@ fxClock: fxClock.java
 	@echo
 
 # ****************************************************
-# Target needed to run the executable from the source folder
+# Target needed to run the executable from the source folder.
 
 run: fxClock
 	@if [ ! -d "/snap/openjfx/current" ]; then \
@@ -46,7 +46,7 @@ run: fxClock
 	@echo
 
 # ****************************************************
-# Target needed to install the executable to user .local
+# Target needed to install the executable.
 
 install: fxClock
 ifneq ($(shell id -u), 0)
@@ -80,7 +80,7 @@ endif
 	@echo
 
 # ****************************************************
-# Target needed to uninstall the executable from user .local
+# Target needed to uninstall the executable.
 
 uninstall:
 ifneq ($(shell id -u), 0)
@@ -107,14 +107,12 @@ endif
 	@echo
 
 # ****************************************************
-# Target needed to clean the source folder for a fresh make
+# Target needed to clean the source folder for a fresh make.
 
 clean:
 	rm -f *.class
 
-	rm -f 'fxClockGenerated.png'
-	rm -f 'fxClock.instancelock'
-
+	rm -rf ~/.local/fxClock
 	rm -rf ~/.java/.userPrefs/fxClock
 
 	@echo "Clean Done !"

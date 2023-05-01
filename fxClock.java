@@ -9,7 +9,6 @@ import javax.sound.sampled.LineUnavailableException;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
@@ -43,7 +42,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
@@ -77,42 +75,6 @@ public class fxClock extends Application {
     static final Insets GNOME_IMAGE_MARGIN_INSETS =
         new Insets(1, 10, 1, 1);
 
-    enum APPSTATE {
-        NEVER_ACTIVE("NEVER_ACTIVE"),
-        ALARM_NOT_SET("ALARM_NOT_SET"),
-
-        SETTING_ALARM("SETTING_ALARM"),
-
-        ALARM_SET("ALARM_SET"),
-        ALARM_RINGING("ALARM_RINGING");
-
-        private final String stateString;
-
-        APPSTATE(String saveAs) {
-            this.stateString = saveAs;
-        }
-
-        private static Map<String, APPSTATE> buildMap() {
-            Map<String, APPSTATE> mapto = new HashMap<>();
-
-            for (APPSTATE appState : APPSTATE.values()) {
-                mapto.put(appState.stateString, appState);
-            }
-            return mapto;
-        }
-
-        private static final Map<String, APPSTATE> mAppStateMap =
-            buildMap();
-
-        private static APPSTATE appStateValueOf(String name) {
-            return mAppStateMap.get(name);
-        }
-
-        public String getStringValue() {
-            return this.stateString;
-        }
-    }
-
     static final String ALARM_VALUE_PREFNAME = "Alarm_Value";
 
     static final String WINDOW_ONTOP_PREFNAME   = "Window_OnTop";
@@ -131,7 +93,10 @@ public class fxClock extends Application {
 
     static final Double TIME_LABEL_FONT_SIZE = 32.0;
     static final Double DATE_LABEL_FONT_SIZE = 22.0;
-    static final Double ALARM_LABEL_FONT_SIZE = 16.0;
+
+    static final Double ALARM_BUTTON_FONT_SIZE = 16.0;
+    static final Integer ALARM_BUTTON_WIDTH = 200;
+    static final Integer ALARM_BUTTON_HEIGHT = 40;
 
     static final LocalDateTimeStringConverter LDT_STRING_CONVERTER =
         new LocalDateTimeStringConverter();
@@ -141,15 +106,15 @@ public class fxClock extends Application {
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
     static final String ALARM_BUTTON_STYLE =
-        "-fx-background-color:" +
-        "linear-gradient(#f2f2f2, #4D9EED)," +
-        "linear-gradient(#fcfcfc 0%, #d9d9d9 20%, #4D9EED 100%)," +
-        "linear-gradient(#dddddd 0%, #f6f6f6 50%);" +
-        "-fx-background-radius: 8,7,6;" +
-        "-fx-background-insets: 0,1,2;" +
         "-fx-text-fill: black;" +
         "-fx-effect: dropshadow(three-pass-box, " +
-            "rgba(0, 0, 0, 0.6), 5, 0.0, 0, 1);";
+            "rgba(0, 0, 0, 0.6), 5, 0.0, 0, 1);" +
+        "-fx-background-insets: 0, 1, 2;" +
+        "-fx-background-radius: 8, 7, 6;" +
+        "-fx-background-color:" +
+            "linear-gradient(#f2f2f2, #4D9EED)," +
+            "linear-gradient(#fcfcfc 0%, #d9d9d9 20%, #4D9EED 100%)," +
+            "linear-gradient(#dddddd 0%, #f6f6f6 50%);";
 
     static final String ALARM_BUTTON_SET_STYLE =
         "-fx-background-color:" +
@@ -185,16 +150,51 @@ public class fxClock extends Application {
             "rgba(0, 0, 0, 0.6), 5, 0.0, 0, 1);";
 
 
+    enum APPSTATE {
+        NEVER_ACTIVE("NEVER_ACTIVE"),
+        ALARM_NOT_SET("ALARM_NOT_SET"),
+        SETTING_ALARM("SETTING_ALARM"),
+        ALARM_SET("ALARM_SET"),
+        ALARM_RINGING("ALARM_RINGING");
+
+        private final String stateString;
+
+        APPSTATE(String saveAs) {
+            this.stateString = saveAs;
+        }
+
+        private static Map<String, APPSTATE> buildMap() {
+            Map<String, APPSTATE> mapto = new HashMap<>();
+
+            for (APPSTATE appState : APPSTATE.values()) {
+                mapto.put(appState.stateString, appState);
+            }
+            return mapto;
+        }
+
+        private static final Map<String, APPSTATE> mAppStateMap =
+            buildMap();
+
+        private static APPSTATE appStateValueOf(String name) {
+            return mAppStateMap.get(name);
+        }
+
+        public String getStringValue() {
+            return this.stateString;
+        }
+    }
+
+
     // Class Global stubs.
     static final Timer mSecondTimer = new Timer();
     static final Preferences mPref = Preferences.userRoot().node(WINDOW_TITLE);
+    BufferedImage mGeneratedApplicationImage;
 
-    Stage mStage;
+    // Application for this UI framework.
+    Stage mApplication;
+    Image mApplicationIcon;
 
-    BufferedImage mBufferedStageIcon;
-    Image mStageIcon;
-
-    Scene mScene;
+    // Application root view for this UI framework.
     VBox mSceneBox;
 
     HBox mTimeDateBox;
@@ -206,6 +206,7 @@ public class fxClock extends Application {
 
     VBox mAlarmEditBox;
     LocalDateTimePicker mAlarmPicker;
+
     HBox mActionBox;
     Button mOkButton;
     Button mCancelButton;
@@ -219,7 +220,7 @@ public class fxClock extends Application {
      */
     @Override
     public void start(Stage stage) {
-        mStage = stage;
+        mApplication = stage;
 
         try {
             final RandomAccessFile randomAccessFile =
@@ -236,6 +237,7 @@ public class fxClock extends Application {
             Platform.exit();
         }
 
+        // Load audio clip for alarm.
         try {
             CLIP_SOUND_FOR_APP = AudioSystem.getAudioInputStream(
                 new File(ALARM_SOUND_FOR_APP));
@@ -248,32 +250,32 @@ public class fxClock extends Application {
         }
 
         // Set window titlebar title & icon.
-        mStage.setTitle(WINDOW_TITLE);
-        mStage.setAlwaysOnTop(getWindowOnTopValue());
-
+        mApplication.setTitle(WINDOW_TITLE);
         createWindowIcon();
         setWindowIcon();
 
-        mStage.setX(getWindowPosX());
-        mStage.setY(getWindowPosY());
-        mStage.setWidth(getWindowWidth());
-        mStage.setHeight(getWindowHeight());
+        // Restore window location, size, onTop user prefs.
+        mApplication.setX(getWindowPosX());
+        mApplication.setY(getWindowPosY());
+        mApplication.setWidth(getWindowWidth());
+        mApplication.setHeight(getWindowHeight());
+        mApplication.setAlwaysOnTop(getWindowOnTopValue());
 
         // Set window scene and initial size.
         initStageScene();
-        mStage.setScene(new Scene(mSceneBox,
+        mApplication.setScene(new Scene(mSceneBox,
             WINDOW_DEFAULT_HEIGHT, WINDOW_DEFAULT_WIDTH));
-        mStage.show();
+        mApplication.show();
 
+        // Create main timer.
         mSecondTimer.scheduleAtFixedRate(new TimerTask() {
             Integer mTimerPrevMin;
             @Override
             public void run() {
                 // Update app with new clockFace icon once a minute.
-                final LocalDateTime ldt = LocalDateTime.ofInstant(
-                    Instant.now(), ZoneId.systemDefault());
+                final Integer nowMinute = LocalDateTime.ofInstant(
+                    Instant.now(), ZoneId.systemDefault()).getMinute();
 
-                final Integer nowMinute = ldt.getMinute();
                 if (mTimerPrevMin == null || mTimerPrevMin != nowMinute) {
                     Platform.runLater(() -> createWindowIcon());
                     Platform.runLater(() -> setWindowIcon());
@@ -283,8 +285,8 @@ public class fxClock extends Application {
 
                 // Check if alarm has gone off.
                 if (getAppState() == APPSTATE.ALARM_SET) {
-                    if (!getAlarmValue().isAfter(LocalDateTime.now())) {
-                        setAppAndPrevState(APPSTATE.ALARM_RINGING);
+                    if (getAlarmValue().isBefore(LocalDateTime.now())) {
+                        setAppState(APPSTATE.ALARM_RINGING);
                         mAlarmButton.setStyle(ALARM_BUTTON_RINGING_STYLE);
                         mClip.loop(Clip.LOOP_CONTINUOUSLY);
                     }
@@ -294,22 +296,24 @@ public class fxClock extends Application {
     }
 
     /** *********************************************************************
-     * Main Stop stage. Set title, icon, etc.
+     * Main Stop stage. Save state thru prefs.
      */
     @Override
     public void stop() {
+        // Cancel main timer.
         mSecondTimer.cancel();
 
-        setWindowPosX(mStage.getX());
-        setWindowPosY(mStage.getY());
-        setWindowWidth(mStage.getWidth());
-        setWindowHeight(mStage.getHeight());
+        // Save window location, size, onTop user prefs.
+        setWindowPosX(mApplication.getX());
+        setWindowPosY(mApplication.getY());
+        setWindowWidth(mApplication.getWidth());
+        setWindowHeight(mApplication.getHeight());
 
         if (getAppState() == APPSTATE.SETTING_ALARM) {
             setAlarmValue(mAlarmPicker.getLocalDateTime());
         }
 
-        setWindowOnTopValue(mStage.isAlwaysOnTop());
+        setWindowOnTopValue(mApplication.isAlwaysOnTop());
     }
 
     /** *********************************************************************
@@ -325,7 +329,7 @@ public class fxClock extends Application {
 
         // Add Icon to Window contents as GNOME doesn't use it in the titlebar.
         if (System.getenv("XDG_SESSION_DESKTOP").contains("GNOME")) {
-            mGnomeImageView = new ImageView(mStageIcon);
+            mGnomeImageView = new ImageView(mApplicationIcon);
             HBox.setMargin(mGnomeImageView, GNOME_IMAGE_MARGIN_INSETS);
             mGnomeImageView.setPreserveRatio(true);
             mGnomeImageView.setFitWidth(GNOME_ICON_WIDTH);
@@ -347,9 +351,9 @@ public class fxClock extends Application {
         mAlarmButton = new Button("Alarm");
         mAlarmButton.setStyle(ALARM_BUTTON_STYLE);
         mAlarmButton.setAlignment(Pos.CENTER);
-        mAlarmButton.setMinHeight(40.0);
-        mAlarmButton.setMinWidth(200.0);
-        mAlarmButton.setFont(new Font(ALARM_LABEL_FONT_SIZE));
+        mAlarmButton.setMinWidth(ALARM_BUTTON_WIDTH);
+        mAlarmButton.setMinHeight(ALARM_BUTTON_HEIGHT);
+        mAlarmButton.setFont(new Font(ALARM_BUTTON_FONT_SIZE));
 
         // Alarm Button action.
         mAlarmButton.setOnMousePressed(e -> {
@@ -365,21 +369,21 @@ public class fxClock extends Application {
         mAlarmButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override public void handle(ActionEvent event) {
                 if (getAppState() == APPSTATE.ALARM_NOT_SET) {
-                    setAppAndPrevState(APPSTATE.SETTING_ALARM);
+                    setAppState(APPSTATE.SETTING_ALARM);
                     removeAlarmValue();
                     updateStageScene();
                     return;
                 }
 
                 if (getAppState() == APPSTATE.ALARM_SET) {
-                    setAppAndPrevState(APPSTATE.ALARM_NOT_SET);
+                    setAppState(APPSTATE.ALARM_NOT_SET);
                     removeAlarmValue();
                     updateStageScene();
                     return;
                 }
 
                 if (getAppState() == APPSTATE.ALARM_RINGING) {
-                    setAppAndPrevState(APPSTATE.ALARM_NOT_SET);
+                    setAppState(APPSTATE.ALARM_NOT_SET);
                     mClip.stop();
                     removeAlarmValue();
                     updateStageScene();
@@ -390,29 +394,6 @@ public class fxClock extends Application {
 
         // Picker node.
         mAlarmPicker = new LocalDateTimePicker();
-
-        // Ok button.
-        mOkButton = new Button();
-        mOkButton.setAlignment(Pos.CENTER);
-
-        // Ok button image.
-        try {
-            mOkButton.setGraphic(new ImageView(new Image(
-                getClass().getResourceAsStream(OK_BUTTON_PNG),
-                    24, 24, false, false)));
-        } catch (Exception e) {
-            System.out.println(
-                "fxClock: initStageScene() okButton image load fails.");
-        }
-
-        // Ok button actions.
-        mOkButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override public void handle(ActionEvent event) {
-                setAppAndPrevState(APPSTATE.ALARM_SET);
-                setAlarmValue(mAlarmPicker.getLocalDateTime());
-                updateStageScene();
-            }
-        });
 
         // Cancel button.
         mCancelButton = new Button();
@@ -432,8 +413,31 @@ public class fxClock extends Application {
         mCancelButton.setOnAction(new EventHandler<ActionEvent>() {
             // Must be in APPSTATE.SETTING_ALARM to get here.
             @Override public void handle(ActionEvent event) {
-                setAppAndPrevState(APPSTATE.ALARM_NOT_SET);
+                setAppState(APPSTATE.ALARM_NOT_SET);
                 removeAlarmValue();
+                updateStageScene();
+            }
+        });
+
+        // Ok button.
+        mOkButton = new Button();
+        mOkButton.setAlignment(Pos.CENTER);
+
+        // Ok button image.
+        try {
+            mOkButton.setGraphic(new ImageView(new Image(
+                getClass().getResourceAsStream(OK_BUTTON_PNG),
+                    24, 24, false, false)));
+        } catch (Exception e) {
+            System.out.println(
+                "fxClock: initStageScene() okButton image load fails.");
+        }
+
+        // Ok button actions.
+        mOkButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent event) {
+                setAppState(APPSTATE.ALARM_SET);
+                setAlarmValue(mAlarmPicker.getLocalDateTime());
                 updateStageScene();
             }
         });
@@ -452,6 +456,7 @@ public class fxClock extends Application {
         mAlarmEditBox.getChildren().add(getNewSpacer());
         mAlarmEditBox.getChildren().add(mActionBox);
 
+
         // Construct top level SceneBox.
         mSceneBox = new VBox();
         mSceneBox.setAlignment(Pos.CENTER);
@@ -460,6 +465,7 @@ public class fxClock extends Application {
 
         mSceneBox.getChildren().add(mAlarmButton);
         mSceneBox.getChildren().add(mAlarmEditBox);
+
 
         if (getAppState() == APPSTATE.ALARM_NOT_SET) {
             mAlarmButton.setVisible(true);
@@ -506,7 +512,7 @@ public class fxClock extends Application {
         // Add Icon to Window contents as GNOME doesn't use it in the titlebar.
         if (System.getenv("XDG_SESSION_DESKTOP").contains("GNOME")) {
             mTimeDateBox.getChildren().remove(mGnomeImageView);
-            mGnomeImageView = new ImageView(mStageIcon);
+            mGnomeImageView = new ImageView(mApplicationIcon);
             HBox.setMargin(mGnomeImageView, GNOME_IMAGE_MARGIN_INSETS);
             mGnomeImageView.setPreserveRatio(true);
             mGnomeImageView.setFitWidth(GNOME_ICON_WIDTH);
@@ -588,7 +594,7 @@ public class fxClock extends Application {
             APP_STATE_DEFAULT.getStringValue()));
     }
 
-    public void setAppAndPrevState(APPSTATE state) {
+    public void setAppState(APPSTATE state) {
         mPref.put(APP_STATE_PREFNAME, state.getStringValue());
     }
 
@@ -711,33 +717,32 @@ public class fxClock extends Application {
         final Double hourRot = totSec / totSecondsInHour * 360.0 - 90;
         final Integer minRot = nowMin * 360 / 60 - 90;
 
-        gc.setLineWidth(4);
         gc.setStroke(Color.BLACK);
-
+        gc.setLineWidth(4);
         gc.strokeLine(48 -  4 * Math.cos(Math.toRadians(hourRot)),
             48 -  4 * Math.sin(Math.toRadians(hourRot)),
             48 + 18 * Math.cos(Math.toRadians(hourRot)),
-            48 + 18 * Math.sin(Math.toRadians(hourRot))
-        );
+            48 + 18 * Math.sin(Math.toRadians(hourRot)));
         gc.strokeLine(48 -  4 * Math.cos(Math.toRadians(minRot)),
             48 -  4 * Math.sin(Math.toRadians(minRot)),
             48 + 26 * Math.cos(Math.toRadians(minRot)),
             48 + 26 * Math.sin(Math.toRadians(minRot)));
+        gc.setLineWidth(1);
 
         // <!-- Clock center, small circle -->
-        gc.setLineWidth(1);
         gc.setFill(Color.BLUE);
         gc.fillOval(46, 46, 4, 4);
 
-        // Save clockFace as global.
+        // Set background transparent.
         final SnapshotParameters snapParms = new SnapshotParameters();
         snapParms.setFill(Color.TRANSPARENT);
 
+        // Save clockFace as global.
         final WritableImage writableImage = new WritableImage(
             WINDOW_ICON_PNG_WIDTH, WINDOW_ICON_PNG_HEIGHT);
         canvas.snapshot(snapParms, writableImage);
 
-        mBufferedStageIcon =
+        mGeneratedApplicationImage =
             SwingFXUtils.fromFXImage((Image) writableImage, null);
     }
 
@@ -747,14 +752,14 @@ public class fxClock extends Application {
      */
     public void setWindowIcon() {
         // Remove one we previously set.
-        if (mStageIcon != null) {
-            mStage.getIcons().remove(mStageIcon);
+        if (mApplicationIcon != null) {
+            mApplication.getIcons().remove(mApplicationIcon);
         }
 
         // Set the new one.
         try {
-            mStageIcon = SwingFXUtils.toFXImage(mBufferedStageIcon, null);
-            mStage.getIcons().add(mStageIcon);
+            mApplicationIcon = SwingFXUtils.toFXImage(mGeneratedApplicationImage, null);
+            mApplication.getIcons().add(mApplicationIcon);
         } catch (Exception e) {
             System.out.println(
                 "fxClock: setWindowIcon() Setting window icon fails: \n" + e);
