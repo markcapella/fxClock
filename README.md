@@ -9,7 +9,8 @@
 
 ## Description
 
-###    A minimally sized java FX app, digital clock for Linux, with a beeping alarm.
+###       A minimally sized Java FX app, digital clock for Linux PLASMA & GNOME desktops,
+###    with a beeping alarm.
 
 
 ## Installation

@@ -8,26 +8,39 @@ import javax.sound.sampled.LineUnavailableException;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+
 import java.io.File;
 import java.io.IOException;
+
+import java.lang.IllegalStateException;
+import java.lang.Runtime;
+import java.lang.Thread;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
 import javafx.embed.swing.SwingFXUtils;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
@@ -46,7 +59,9 @@ import javafx.scene.paint.LinearGradient;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.text.Font;
+
 import javafx.stage.Stage;
+
 import javafx.util.converter.LocalDateTimeStringConverter;
 
 
@@ -190,6 +205,7 @@ public class fxClock extends Application {
     Image mApplicationIcon;
 
     // Application root view for this UI framework.
+    Scene mScene;
     VBox mSceneBox;
 
     HBox mTimeDateBox;
@@ -215,7 +231,31 @@ public class fxClock extends Application {
      */
     @Override
     public void start(Stage stage) {
+        // System.out.println("fxClock: start() Starts.");
+
         mApplication = stage;
+
+        // Catch SIGTERM (kill -15 #) and use for all shutdown.
+        // stop() method can be ignored.
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                // System.out.println("fxClock: SHUTDOWN HOOK: Starts.");
+
+                // Cancel main timer. (This method may be called repeatedly.)
+                // Required in this method as stop() method is not triggered during
+                // during abnormal app termination (SIGTERM on SESSIOJN LOGOUT or
+                // proc cancel using sysmon, cmdline etc.
+                mSecondTimer.cancel();
+
+                // Save edit date in spinner @ last minute.
+                if (getAppState() == APPSTATE.SETTING_ALARM) {
+                    setAlarmValue(mAlarmPicker.getLocalDateTime());
+                }
+
+                // System.out.println("fxClock: SHUTDOWN HOOK: Finishes.");
+            }
+        });
 
         // Load audio clip for alarm.
         try {
@@ -242,9 +282,36 @@ public class fxClock extends Application {
         mApplication.setAlwaysOnTop(getWindowOnTopValue());
 
         // Set window scene and initial size.
-        initStageScene();
-        mApplication.setScene(new Scene(mSceneBox,
-            WINDOW_DEFAULT_HEIGHT, WINDOW_DEFAULT_WIDTH));
+        initStageSceneBox();
+        mScene = new Scene(mSceneBox, WINDOW_DEFAULT_HEIGHT, WINDOW_DEFAULT_WIDTH);
+        mApplication.setScene(mScene);
+
+        // Observe and update scene location, size, user prefs.
+        mScene.getWindow().xProperty().addListener((obs, oldValue, newValue) -> {
+            // System.out.println("fxClock: window.xProperty() LISTENER NEW VALUE: " + newValue);
+            setWindowPosX(newValue.doubleValue());
+        });
+        mScene.getWindow().yProperty().addListener((obs, oldValue, newValue) -> {
+            // System.out.println("fxClock: window.yProperty() LISTENER NEW VALUE: " + newValue);
+            setWindowPosY(newValue.doubleValue());
+        });
+        mScene.getWindow().widthProperty().addListener((obs, oldValue, newValue) -> {
+            // System.out.println("fxClock: window.widthProperty() LISTENER NEW VALUE: " + newValue);
+            setWindowWidth(newValue.doubleValue());
+        });
+        mScene.getWindow().heightProperty().addListener((obs, oldValue, newValue) -> {
+            // System.out.println("fxClock: window.heightProperty() LISTENER NEW VALUE: " + newValue);
+            setWindowHeight(newValue.doubleValue());
+        });
+
+        mApplication.alwaysOnTopProperty().
+            addListener((obs, oldValue, newValue) -> {
+                // System.out.println("fxClock: alwaysOnTopProperty() LISTENER Starts.");
+                // System.out.println("fxClock: alwaysOnTopProperty() LISTENER NEW VALUE: " + newValue);
+                setWindowOnTopValue(newValue);
+                // System.out.println("fxClock: alwaysOnTopProperty() LISTENER Stops.");
+        });
+
         mApplication.show();
 
         // Create main timer.
@@ -259,7 +326,7 @@ public class fxClock extends Application {
                 if (mTimerPrevMin == null || mTimerPrevMin != nowMinute) {
                     Platform.runLater(() -> createWindowIcon());
                     Platform.runLater(() -> setWindowIcon());
-                    Platform.runLater(() -> updateStageScene());
+                    Platform.runLater(() -> updateStageSceneBox());
                     mTimerPrevMin = nowMinute;
                 }
 
@@ -273,6 +340,8 @@ public class fxClock extends Application {
                 }
             }
         }, 0, 1000 /* per-second */);
+
+        // System.out.println("fxClock: start() Stops.");
     }
 
     /** *********************************************************************
@@ -280,26 +349,20 @@ public class fxClock extends Application {
      */
     @Override
     public void stop() {
-        // Cancel main timer.
+        // System.out.println("fxClock: stop() Starts.");
+
+        // Cancel main timer. (This method may be called repeatedly.)
+        // Required in this method as active timer prevents us from
+        // Proceeding to ShutdownHook() during normal user window close.
         mSecondTimer.cancel();
 
-        // Save window location, size, onTop user prefs.
-        setWindowPosX(mApplication.getX());
-        setWindowPosY(mApplication.getY());
-        setWindowWidth(mApplication.getWidth());
-        setWindowHeight(mApplication.getHeight());
-
-        if (getAppState() == APPSTATE.SETTING_ALARM) {
-            setAlarmValue(mAlarmPicker.getLocalDateTime());
-        }
-
-        setWindowOnTopValue(mApplication.isAlwaysOnTop());
+        // System.out.println("fxClock: stop() Stops.");
     }
 
     /** *********************************************************************
      * Create main Form / display scene ... Date/time and alarm button.
      */
-    public void initStageScene() {
+    public void initStageSceneBox() {
         // HBox for display of Current Time and Current Date.
         final LocalDateTime ldt = LocalDateTime.ofInstant(
             Instant.now(), ZoneId.systemDefault());
@@ -351,14 +414,14 @@ public class fxClock extends Application {
                 if (getAppState() == APPSTATE.ALARM_NOT_SET) {
                     setAppState(APPSTATE.SETTING_ALARM);
                     removeAlarmValue();
-                    updateStageScene();
+                    updateStageSceneBox();
                     return;
                 }
 
                 if (getAppState() == APPSTATE.ALARM_SET) {
                     setAppState(APPSTATE.ALARM_NOT_SET);
                     removeAlarmValue();
-                    updateStageScene();
+                    updateStageSceneBox();
                     return;
                 }
 
@@ -366,7 +429,7 @@ public class fxClock extends Application {
                     setAppState(APPSTATE.ALARM_NOT_SET);
                     mClip.stop();
                     removeAlarmValue();
-                    updateStageScene();
+                    updateStageSceneBox();
                     return;
                 }
             }
@@ -386,7 +449,7 @@ public class fxClock extends Application {
                     24, 24, false, false)));
         } catch (Exception e) {
             System.out.println(
-                "fxClock: initStageScene() cancelButton image load fails.");
+                "fxClock: initStageSceneBox() cancelButton image load fails.");
         }
 
         // Cancel button actions.
@@ -395,7 +458,7 @@ public class fxClock extends Application {
             @Override public void handle(ActionEvent event) {
                 setAppState(APPSTATE.ALARM_NOT_SET);
                 removeAlarmValue();
-                updateStageScene();
+                updateStageSceneBox();
             }
         });
 
@@ -410,7 +473,7 @@ public class fxClock extends Application {
                     24, 24, false, false)));
         } catch (Exception e) {
             System.out.println(
-                "fxClock: initStageScene() okButton image load fails.");
+                "fxClock: initStageSceneBox() okButton image load fails.");
         }
 
         // Ok button actions.
@@ -418,7 +481,7 @@ public class fxClock extends Application {
             @Override public void handle(ActionEvent event) {
                 setAppState(APPSTATE.ALARM_SET);
                 setAlarmValue(mAlarmPicker.getLocalDateTime());
-                updateStageScene();
+                updateStageSceneBox();
             }
         });
 
@@ -447,6 +510,7 @@ public class fxClock extends Application {
         mSceneBox.getChildren().add(mAlarmEditBox);
 
 
+        // Update state.
         if (getAppState() == APPSTATE.ALARM_NOT_SET) {
             mAlarmButton.setVisible(true);
             mAlarmButton.setManaged(true);
@@ -484,7 +548,7 @@ public class fxClock extends Application {
     /** *********************************************************************
      * Update main Form / display scene ... Date/time and alarm button.
      */
-    public void updateStageScene() {
+    public void updateStageSceneBox() {
         // HBox for display of Current Time and Current Date.
         final LocalDateTime ldt = LocalDateTime.ofInstant(
             Instant.now(), ZoneId.systemDefault());
@@ -549,11 +613,22 @@ public class fxClock extends Application {
      * Helper methods ... all Preferences getter / setters.
      */
     public Boolean getWindowOnTopValue() {
-        return mPref.getBoolean(WINDOW_ONTOP_PREFNAME, WINDOW_ONTOP_DEFAULT);
+        final Boolean result = mPref.getBoolean(WINDOW_ONTOP_PREFNAME, WINDOW_ONTOP_DEFAULT);
+        // System.out.println("fxClock: getWindowOnTopValue() READS: " + result);
+
+        return result;
     }
 
     public void setWindowOnTopValue(Boolean onTopValue) {
+        // System.out.println("fxClock: setWindowOnTopValue() WRITES: " + onTopValue);
+
         mPref.putBoolean(WINDOW_ONTOP_PREFNAME, onTopValue);
+        try {
+            mPref.flush(); // seriously reuired.
+        } catch (BackingStoreException e) {
+            throw new IllegalStateException(
+                "Java VM Preferences services are unavailable to this app - fatal.");
+        }
     }
 
     public LocalDateTime getAlarmValue() {
@@ -563,6 +638,12 @@ public class fxClock extends Application {
 
     public void setAlarmValue(LocalDateTime alarmValue) {
         mPref.put(ALARM_VALUE_PREFNAME, getStringFromLDT(alarmValue));
+        try {
+            mPref.flush(); // seriously reuired.
+        } catch (BackingStoreException e) {
+            throw new IllegalStateException(
+                "Java VM Preferences services are unavailable to this app - fatal.");
+        }
     }
 
     public void removeAlarmValue() {
@@ -576,6 +657,12 @@ public class fxClock extends Application {
 
     public void setAppState(APPSTATE state) {
         mPref.put(APP_STATE_PREFNAME, state.getStringValue());
+        try {
+            mPref.flush(); // seriously reuired.
+        } catch (BackingStoreException e) {
+            throw new IllegalStateException(
+                "Java VM Preferences services are unavailable to this app - fatal.");
+        }
     }
 
     public Double getWindowPosX() {
@@ -584,6 +671,12 @@ public class fxClock extends Application {
 
     public void setWindowPosX(Double x) {
         mPref.putDouble(WINDOW_POS_X_PREFNAME, x);
+        try {
+            mPref.flush(); // seriously reuired.
+        } catch (BackingStoreException e) {
+            throw new IllegalStateException(
+                "Java VM Preferences services are unavailable to this app - fatal.");
+        }
     }
 
     public Double getWindowPosY() {
@@ -592,6 +685,12 @@ public class fxClock extends Application {
 
     public void setWindowPosY(Double y) {
         mPref.putDouble(WINDOW_POS_Y_PREFNAME, y);
+        try {
+            mPref.flush(); // seriously reuired.
+        } catch (BackingStoreException e) {
+            throw new IllegalStateException(
+                "Java VM Preferences services are unavailable to this app - fatal.");
+        }
     }
 
     public Double getWindowWidth() {
@@ -600,6 +699,12 @@ public class fxClock extends Application {
 
     public void setWindowWidth(Double w) {
         mPref.putDouble(WINDOW_WIDTH_PREFNAME, w);
+        try {
+            mPref.flush(); // seriously reuired.
+        } catch (BackingStoreException e) {
+            throw new IllegalStateException(
+                "Java VM Preferences services are unavailable to this app - fatal.");
+        }
     }
 
     public Double getWindowHeight() {
@@ -608,6 +713,12 @@ public class fxClock extends Application {
 
     public void setWindowHeight(Double h) {
         mPref.putDouble(WINDOW_HEIGHT_PREFNAME, h);
+        try {
+            mPref.flush(); // seriously reuired.
+        } catch (BackingStoreException e) {
+            throw new IllegalStateException(
+                "Java VM Preferences services are unavailable to this app - fatal.");
+        }
     }
 
     /** *********************************************************************

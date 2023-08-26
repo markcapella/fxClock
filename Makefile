@@ -59,6 +59,11 @@ endif
 	@echo
 	@echo "sudo make install: starts ..."
 
+	cp 'startFxClock' /usr/local/bin/
+	cp 'stopFxClock' /usr/local/bin/
+	chmod +x /usr/local/bin/startFxClock
+	chmod +x /usr/local/bin/stopFxClock
+
 	mkdir -p /usr/local/fxClock
 
 	cp *.class /usr/local/fxClock
@@ -71,8 +76,6 @@ endif
 	cp 'fxclock.desktop' /usr/share/applications/
 	cp 'fxclock.png' /usr/share/icons/hicolor/48x48/apps/
 
-	sudo -u ${SUDO_USER} \
-		mkdir -p /home/${SUDO_USER}/.local/fxClock
 	sudo -u ${SUDO_USER} \
 		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
 
@@ -93,13 +96,14 @@ endif
 	@echo
 	@echo "sudo make uninstall: starts ..."
 
+	rm -f /usr/local/bin/startFxClock
+	rm -f /usr/local/bin/stopFxClock
+
 	rm -rf /usr/local/fxClock
 
 	rm -f /usr/share/applications/fxclock.desktop
 	rm -f /usr/share/icons/hicolor/48x48/apps/fxclock.png
 
-	sudo -u ${SUDO_USER} \
-		rm -rf /home/${SUDO_USER}/.local/fxClock
 	sudo -u ${SUDO_USER} \
 		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
 
@@ -112,7 +116,6 @@ endif
 clean:
 	rm -f *.class
 
-	rm -rf ~/.local/fxClock
 	rm -rf ~/.java/.userPrefs/fxClock
 
 	@echo "Clean Done !"

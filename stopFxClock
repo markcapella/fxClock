@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Kill all fxClock Java procs.
+for p in $(pgrep java); do \
+    cat /proc/$p/cmdline | egrep fxClock 1>/dev/null && \
+        kill -15 $p; done
