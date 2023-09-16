@@ -8,7 +8,7 @@
 */
 
 .CalendarTimePickerSkin .timeLabel { 
-	-fx-font-size: 1.5em;
-	-fx-opacity: 0.5;
+	-fx-font-size: 1.75em;
+	-fx-opacity: 0.6;
 }
 

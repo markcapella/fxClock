@@ -145,6 +145,8 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
 		}
     };
     public final void setLabelDateFormat(DateFormat value) { labelDateFormatProperty().set(value); }
+
+
     public final DateFormat getLabelDateFormat() {
     	if (labelDateFormat.get() == null) {
     		return getLABEL_DATEFORMAT_DEFAULT();
@@ -152,6 +154,7 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
 
     	// prevent timezones to screw up things
     	DateFormat labelDateFormat = this.labelDateFormat.get();
+
     	// getCalendar must not be null for a clone()
     	if (labelDateFormat.getCalendar() == null) {
     		labelDateFormat.setCalendar(Calendar.getInstance(getSkinnable().getLocale()));
@@ -159,10 +162,13 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
     	if (labelDateFormat.getNumberFormat() == null) {
     		labelDateFormat.setNumberFormat(NumberFormat.getInstance(getSkinnable().getLocale()));
     	}
-    	labelDateFormat = (DateFormat)labelDateFormat.clone();    	
+
+		labelDateFormat = (DateFormat) labelDateFormat.clone();
 		labelDateFormat.setTimeZone(TimeZone.getDefault());
+
 		return labelDateFormat;
     }
+
     public final CalendarTimePickerSkin withLabelDateFormat(DateFormat value) { setLabelDateFormat(value); return this; }
     private DateFormat getLABEL_DATEFORMAT_DEFAULT() {
     	return DateFormat.getTimeInstance(DateFormat.SHORT, getSkinnable().getLocale());
@@ -302,15 +308,21 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
 		timeText.getStyleClass().add("timeLabel");
 		timeText.setMouseTransparent(true);
 
+		timeText.setStroke(Color.valueOf("#0000ff"));
+		timeText.setStrokeWidth(1);
+		timeText.setFill(Color.GRAY);
+
 		// layout
 		refreshLayout();
 		
 		// add self as CSS style
 		getSkinnable().getStyleClass().add(this.getClass().getSimpleName()); // always add self as style class, because CSS should relate to the skin not the control		
 	}
+
 	final private Slider hourScrollSlider = new Slider();
 	final private Slider minuteScrollSlider = new Slider();
 	final private Slider secondScrollSlider = new Slider();
+
 	final private Text timeText = new Text("XX:XX:XX");
 
 	/**
@@ -491,9 +503,11 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
 		String formattedDate = labelDateFormat.format(DATE_WITH_UNIQUE_NUMBERS_FOR_HMS);
 		
 		getChildren().clear();
+
 		StackPane lStackPane = new StackPane();
 		VBox lVBox = new VBox(0);
 		lVBox.alignmentProperty().set(Pos.CENTER);
+
 		if ( formattedDate.contains("" + UNIQUE_NUMBER_FOR_H) ) {
 			if (getShowTickLabels() == ShowTickLabels.YES) {
 				lVBox.getChildren().add(hourLabelsPane);
@@ -509,11 +523,14 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
 		if ( formattedDate.contains("" + UNIQUE_NUMBER_FOR_S) ) {
 			lVBox.getChildren().add(secondScrollSlider);
 		}
+
 		lStackPane.getChildren().add(lVBox);
 		lStackPane.getChildren().add(timeText);
 		StackPane.setAlignment(timeText, getShowTickLabels() == ShowTickLabels.YES ? Pos.CENTER : Pos.TOP_CENTER);
+
 		getChildren().add(lStackPane);
 	}
+
 	final static int UNIQUE_NUMBER_FOR_H = 2;
 	final static int UNIQUE_NUMBER_FOR_M = 3;
 	final static int UNIQUE_NUMBER_FOR_S = 4;
@@ -531,16 +548,20 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
 			int lHour = lCalendar == null ? 0 : lCalendar.getTime().getHours();
 			int lMinute = lCalendar == null ? 0 : lCalendar.getTime().getMinutes();
 			int lSecond = lCalendar == null ? 0 : lCalendar.getTime().getSeconds();
+
 			hourScrollSlider.valueProperty().set(lHour);
 			minuteScrollSlider.valueProperty().set(lMinute);
 			secondScrollSlider.valueProperty().set(lSecond);
+
 			String lTimeText = lCalendar == null ? "Ø" : getLabelDateFormat().format(lCalendar.getTime());
 			timeText.setText(lTimeText);
 		}
+
 		finally {
 			refreshingAtomicInteger.addAndGet(-1);
 		}
 	}
+
 	final private AtomicInteger refreshingAtomicInteger = new AtomicInteger(0);
 	
 	/**

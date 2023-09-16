@@ -48,6 +48,7 @@ import javafx.css.Styleable;
 import javafx.css.converter.EnumConverter;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -169,20 +170,65 @@ public class CalendarPickerControlSkin extends CalendarPickerMonthlySkinAbstract
 
 	// ==================================================================================================================
 	// StyleableProperties
-	
+
+    private static class StyleableProperties {
+        private static final CssMetaData<CalendarPicker, ShowWeeknumbers> SHOW_WEEKNUMBERS =
+			new CssMetaDataForSkinProperty<CalendarPicker, CalendarPickerControlSkin, ShowWeeknumbers>(
+				"-fxx-show-weeknumbers",
+				new EnumConverter<ShowWeeknumbers>(ShowWeeknumbers.class),
+				ShowWeeknumbers.NO ) {
+				@Override
+				protected ObjectProperty<ShowWeeknumbers> getProperty(CalendarPickerControlSkin s) {
+					return s.showWeeknumbersProperty();
+				}
+			};
+
+        private static final CssMetaData<CalendarPicker, DateFormat> LABEL_DATEFORMAT =
+			new CssMetaDataForSkinProperty<CalendarPicker, CalendarPickerControlSkin, DateFormat>("-fxx-label-dateformat", new SimpleDateFormatConverter(), new SimpleDateFormat("d") ) {
+				@Override
+				protected ObjectProperty<DateFormat> getProperty(CalendarPickerControlSkin s) {
+					return s.labelDateFormatProperty();
+				}
+			};
+
+        private static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
+
+        static {
+            final List<CssMetaData<? extends Styleable, ?>> styleables =
+				new ArrayList<CssMetaData<? extends Styleable, ?>>(SkinBase.getClassCssMetaData());
+
+            styleables.add(SHOW_WEEKNUMBERS);
+            styleables.add(LABEL_DATEFORMAT);
+
+            STYLEABLES = Collections.unmodifiableList(styleables);
+        }
+    }
+
 	/** ShowWeeknumbers: */
+    public enum ShowWeeknumbers {
+		YES,
+		NO
+	}
+
     public final ObjectProperty<ShowWeeknumbers> showWeeknumbersProperty() { return showWeeknumbers; }
-    private ObjectProperty<ShowWeeknumbers> showWeeknumbers = new SimpleStyleableObjectProperty<ShowWeeknumbers>(StyleableProperties.SHOW_WEEKNUMBERS, this, "showWeeknumbers", StyleableProperties.SHOW_WEEKNUMBERS.getInitialValue(null)) {
-    	{ // anonymous constructor
-			addListener( (invalidationEvent) -> {
-                layoutNodes();
-			});
-		}
-    };
+
+    private ObjectProperty<ShowWeeknumbers> showWeeknumbers =
+		new SimpleStyleableObjectProperty<ShowWeeknumbers>(
+			StyleableProperties.SHOW_WEEKNUMBERS,
+			this,
+			"showWeeknumbers",
+			StyleableProperties.SHOW_WEEKNUMBERS.getInitialValue(null)) {
+			{
+				addListener(invalidationEvent -> {
+					layoutNodes();
+				});
+			}
+		};
+
     public final void setShowWeeknumbers(ShowWeeknumbers value) { showWeeknumbersProperty().set(value); }
     public final ShowWeeknumbers getShowWeeknumbers() { return showWeeknumbers.get(); }
+
     public final CalendarPickerControlSkin withShowWeeknumbers(ShowWeeknumbers value) { setShowWeeknumbers(value); return this; }
-    public enum ShowWeeknumbers {YES, NO}
     
 	/** LabelDateFormat: */
     public final ObjectProperty<DateFormat> labelDateFormatProperty() { return labelDateFormat; }
@@ -198,34 +244,6 @@ public class CalendarPickerControlSkin extends CalendarPickerMonthlySkinAbstract
     public final CalendarPickerControlSkin withLabelDateFormat(DateFormat value) { setLabelDateFormat(value); return this; }
     static private final SimpleDateFormat ID_DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd");
     
-    // ----------------------------
-    // communicate the styleables
-
-    private static class StyleableProperties {
-    	
-        private static final CssMetaData<CalendarPicker, ShowWeeknumbers> SHOW_WEEKNUMBERS = new CssMetaDataForSkinProperty<CalendarPicker, CalendarPickerControlSkin, ShowWeeknumbers>("-fxx-show-weeknumbers", new EnumConverter<ShowWeeknumbers>(ShowWeeknumbers.class), ShowWeeknumbers.YES ) {
-        	@Override 
-        	protected ObjectProperty<ShowWeeknumbers> getProperty(CalendarPickerControlSkin s) {
-            	return s.showWeeknumbersProperty();
-            }
-        };
-
-        private static final CssMetaData<CalendarPicker, DateFormat> LABEL_DATEFORMAT = new CssMetaDataForSkinProperty<CalendarPicker, CalendarPickerControlSkin, DateFormat>("-fxx-label-dateformat", new SimpleDateFormatConverter(), new SimpleDateFormat("d") ) {
-        	@Override 
-        	protected ObjectProperty<DateFormat> getProperty(CalendarPickerControlSkin s) {
-            	return s.labelDateFormatProperty();
-            }
-        };
-
-        private static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
-        static {
-            final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<CssMetaData<? extends Styleable, ?>>(SkinBase.getClassCssMetaData());
-            styleables.add(SHOW_WEEKNUMBERS);
-            styleables.add(LABEL_DATEFORMAT);
-            STYLEABLES = Collections.unmodifiableList(styleables);
-        }
-    }
-
     /**
      * @return The CssMetaData associated with this class, which may include the
      * CssMetaData of its super classes.
@@ -314,8 +332,7 @@ public class CalendarPickerControlSkin extends CalendarPickerMonthlySkinAbstract
 		}
 		
 		// weeknumber labels
-		for (int i = 0; i < 6; i++)
-		{
+		for (int i = 0; i < 6; i++) {
 			// create buttons
 			Label lLabel = new Label("" + i);
 			lLabel.getStyleClass().add("weeknumber");
@@ -358,15 +375,18 @@ public class CalendarPickerControlSkin extends CalendarPickerMonthlySkinAbstract
 		// add to self
         getSkinnable().getStyleClass().add(this.getClass().getSimpleName()); // always add self as style class, because CSS should relate to the skin not the control
 	}
+
 	// the result
 	private ListSpinner<String> monthListSpinner = null;
 	private ListSpinner<Integer> yearListSpinner = null;
 	private Button todayButton = new Button("   ");
+
 	final private List<Label> weekdayLabels = new ArrayList<Label>();
 	final private List<Label> weeknumberLabels = new ArrayList<Label>();
 	final private List<ToggleButton> dayButtons = new ArrayList<ToggleButton>();
 	final private CalendarTimePicker timePicker = new CalendarTimePicker();
 	final private Map<BooleanProperty, ToggleButton> booleanPropertyToDayToggleButtonMap = new WeakHashMap<BooleanProperty, ToggleButton>();
+
 	final private EventHandler<MouseEvent> toggleButtonMouseReleasedPropertyEventHandler = new EventHandler<MouseEvent>()
 	{
 		@Override
@@ -472,12 +492,10 @@ public class CalendarPickerControlSkin extends CalendarPickerMonthlySkinAbstract
 		}
 		gridPane.getColumnConstraints().addAll(lColumnConstraintsAlwaysGrow, lColumnConstraintsAlwaysGrow, lColumnConstraintsAlwaysGrow, lColumnConstraintsAlwaysGrow, lColumnConstraintsAlwaysGrow, lColumnConstraintsAlwaysGrow, lColumnConstraintsAlwaysGrow);
 
-		// month spinner
+		// month + year spinners row.
 		gridPane.add(monthListSpinner, new GridPane.C().col(lWeeknumbersCols).row(0).colSpan(4).rowSpan(1));
-		
-		// year spinner
 		gridPane.add(yearListSpinner, new GridPane.C().col(lWeeknumbersCols + 4).row(0).colSpan(3).rowSpan(1));
-		
+
 		// double click here to show today
 		if (lShowWeeknumbers) {
 			gridPane.add(todayButton, new GridPane.C().col(0).row(1));
@@ -486,6 +504,7 @@ public class CalendarPickerControlSkin extends CalendarPickerMonthlySkinAbstract
 		// weekday labels
 		for (int i = 0; i < 7; i++)
 		{
+			GridPane.setMargin(weekdayLabels.get(i), new Insets(15, 0, 0, 0));
 			gridPane.add(weekdayLabels.get(i), new GridPane.C().col(lWeeknumbersCols + i).row(1));
 		}
 		

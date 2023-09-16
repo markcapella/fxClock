@@ -14,7 +14,7 @@
 }
 
 .CalendarPickerControlSkin .weekend { 
-	-fx-text-fill: -fx-accent;
+	-fx-text-fill: "#0000ff";
 }
 
 .CalendarPickerControlSkin .day-button { 
