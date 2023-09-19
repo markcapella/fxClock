@@ -13,6 +13,10 @@ JRUNTIME = java
 # Targets needed to build the executable from the source folder.
 
 fxClock: fxClock.java
+	@echo
+	@echo "Build starts ..."
+	@echo
+
 	@if [ ! -d "/snap/openjfx/current" ]; then \
 		echo "Error! The openjfx package is not installed, but is required."; \
 		echo "   try 'sudo snap install openjfx', then re-run this make."; \
@@ -33,6 +37,10 @@ fxClock: fxClock.java
 # Target needed to run the executable from the source folder.
 
 run: fxClock
+	@echo
+	@echo "Run: starts ..."
+	@echo
+
 	@if [ ! -d "/snap/openjfx/current" ]; then \
 		echo "Error! The openjfx package is not installed, but is required."; \
 		echo "   try 'sudo snap install openjfx', then re-run this make."; \
@@ -58,7 +66,7 @@ ifneq ($(shell id -u), 0)
 endif
 
 	@echo
-	@echo "sudo make install: starts ..."
+	@echo "Install: starts ..."
 	@echo
 
 	cp 'startFxClock' /usr/local/bin/
@@ -98,7 +106,7 @@ ifneq ($(shell id -u), 0)
 endif
 
 	@echo
-	@echo "sudo make uninstall: starts ..."
+	@echo "Uninstall: starts ..."
 	@echo
 
 	rm -f /usr/local/bin/startFxClock
@@ -123,6 +131,10 @@ endif
 # Target needed to clean the source folder for a fresh make.
 
 clean:
+	@echo
+	@echo "Clean: starts ..."
+	@echo
+
 	rm -f *.class
 
 	rm -rf ~/.java/.userPrefs/fxClock
