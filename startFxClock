@@ -1,14 +1,12 @@
 #!/bin/bash
 
-# Kill all fxClock Java procs.
-for p in $(pgrep java); do \
-    cat /proc/$p/cmdline | egrep fxClock 1>/dev/null && \
-        kill -15 $p; done
+# Kill all fxClock Java apps I've started.
+stopFxClock
 
-# Launch GUI app based on SESSION type.
+# Launch fxClock Java app by desktop.
 if [[ $XDG_SESSION_DESKTOP == "KDE" ]]; then
     kioclient exec /usr/share/applications/fxclock.desktop 1>/dev/null 2>/dev/null
 fi
-if [[ $XDG_SESSION_DESKTOP == "GNOME" ]]; then
+if [[ $XDG_SESSION_DESKTOP == "ubuntu:GNOME" ]]; then
     gtk-launch fxclock.desktop
 fi
