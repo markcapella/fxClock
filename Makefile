@@ -2,9 +2,11 @@
 # *****************************************************
 # Variables to control Makefile operation.
 
+OPENJFX = /usr/share/openjfx/lib
+
 JCOMPILER = javac
 JFLAGS = \
-	--module-path /snap/openjfx/current/sdk/lib/ \
+	--module-path $(OPENJFX) \
 	--add-modules javafx.controls,javafx.swing,javafx.media
 
 JRUNTIME = java
@@ -17,9 +19,9 @@ fxClock: fxClock.java
 	@echo "Build starts ..."
 	@echo
 
-	@if [ ! -d "/snap/openjfx/current" ]; then \
+	@if [ ! -d $(OPENJFX) ]; then \
 		echo "Error! The openjfx package is not installed, but is required."; \
-		echo "   try 'sudo snap install openjfx', then re-run this make."; \
+		echo "   try 'sudo apt install openjfx', then re-run this make."; \
 		echo ""; \
 		exit 1; \
 	fi
@@ -41,9 +43,9 @@ run: fxClock
 	@echo "Run: starts ..."
 	@echo
 
-	@if [ ! -d "/snap/openjfx/current" ]; then \
+	@if [ ! -d $(OPENJFX) ]; then \
 		echo "Error! The openjfx package is not installed, but is required."; \
-		echo "   try 'sudo snap install openjfx', then re-run this make."; \
+		echo "   try 'sudo apt install openjfx', then re-run this make."; \
 		echo ""; \
 		exit 1; \
 	fi
