@@ -236,12 +236,6 @@ public class fxClock extends Application {
 
         mApplication.setScene(new Scene(createApplicationScene(),
             WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT));
-        mTimeBoxFontAlert =
-            createNewFontDialog("Time Fontsize", getTimeBoxFontSize());
-        mTimeBoxFontAlert.initOwner(mApplication.getScene().getWindow());
-        mDateBoxFontAlert =
-            createNewFontDialog("Date Fontsize", getDateBoxFontSize());
-        mDateBoxFontAlert.initOwner(mApplication.getScene().getWindow());
 
         createApplicationPropertyListeners(mApplication);
 
@@ -251,8 +245,12 @@ public class fxClock extends Application {
                 if (getAppState() == APPSTATE.SETTING_ALARM) {
                     mAlarmDialog.close();
                 }
-                mTimeBoxFontAlert.close();
-                mDateBoxFontAlert.close();
+                if (mTimeBoxFontAlert != null) {
+                    mTimeBoxFontAlert.close();
+                }
+                if (mDateBoxFontAlert != null) {
+                    mDateBoxFontAlert.close();
+                }
             }
         });
 
@@ -442,23 +440,26 @@ public class fxClock extends Application {
             timeDateBox.getChildren().add(mGnomeImageView);
         }
 
-        if (mTimeLabel != null) {
-            timeDateBox.getChildren().remove(mTimeLabel);
-        }
-        if (mDateLabel != null) {
-            timeDateBox.getChildren().remove(mDateLabel);
-        }
-
+        // Get local time and date.
         final LocalDateTime ldt =
             LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
 
+        // Update Time Label object.
+        if (mTimeLabel != null) {
+            timeDateBox.getChildren().remove(mTimeLabel);
+        }
         mTimeLabel = new Label(getNNWithLeadZero(ldt.getHour()) + ":" +
             getNNWithLeadZero(ldt.getMinute()) + " ");
         mTimeLabel.setFont(new Font(getTimeBoxFontSize()));
 
+        // Create click action for Time Label font-size adjuster-slider.
         mTimeLabel.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent e) {
+                mTimeBoxFontAlert =
+                    createNewFontDialog("Time Fontsize", getTimeBoxFontSize());
+                mTimeBoxFontAlert.initOwner(mApplication.getScene().getWindow());
+
                 Optional<ButtonType> result = mTimeBoxFontAlert.showAndWait();
                 if (result.get() == ButtonType.OK) {
                     final Slider timeFontSlider = (Slider) mTimeBoxFontAlert.getDialogPane().getContent();
@@ -469,13 +470,22 @@ public class fxClock extends Application {
         });
         timeDateBox.getChildren().add(mTimeLabel);
 
+        // Update Date Label object.
+        if (mDateLabel != null) {
+            timeDateBox.getChildren().remove(mDateLabel);
+        }
         mDateLabel = new Label(MONTH_NAMES[ldt.getMonthValue() - 1] + " " +
             getNNWithLeadZero(ldt.getDayOfMonth()));
         mDateLabel.setFont(new Font(getDateBoxFontSize()));
 
+        // Create click action for Date Label font-size adjuster-slider.
         mDateLabel.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent e) {
+                mDateBoxFontAlert =
+                    createNewFontDialog("Date Fontsize", getDateBoxFontSize());
+                mDateBoxFontAlert.initOwner(mApplication.getScene().getWindow());
+
                 Optional<ButtonType> result = mDateBoxFontAlert.showAndWait();
                 if (result.get() == ButtonType.OK) {
                     final Slider dateFontSlider = (Slider) mDateBoxFontAlert.getDialogPane().getContent();

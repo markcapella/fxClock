@@ -91,8 +91,8 @@ endif
 
 	sudo -u ${SUDO_USER} \
 		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
-	@echo
 
+	@echo
 	@echo "Install Done !"
 	@echo
 
@@ -124,8 +124,8 @@ endif
 
 	sudo -u ${SUDO_USER} \
 		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
-	@echo
 
+	@echo
 	@echo "Uninstall Done !"
 	@echo
 
