@@ -67,17 +67,19 @@ import javax.sound.sampled.LineUnavailableException;
 
 public class fxClock extends Application {
     // All app static finals.
-    static final String   WINDOW_TITLE                = "fxClock";
-    static final String   ALARM_SOUND_FOR_APP         = "alarmBeep.wav";
+    static final String   WINDOW_TITLE = "fxClock";
+    static final String   ALARM_SOUND_FOR_APP =
+        "/usr/local/fxClock/alarmBeep.wav";
 
-    static final Integer  WINDOW_ICON_PNG_HEIGHT     = 96;
-    static final Integer  WINDOW_ICON_PNG_WIDTH      = 96;
+    static final Integer  WINDOW_ICON_PNG_HEIGHT    = 96;
+    static final Integer  WINDOW_ICON_PNG_WIDTH     = 96;
+    static final Integer  GNOME_ICON_HEIGHT         = 24;
+    static final Integer  GNOME_ICON_WIDTH          = 24;
 
-    static final Integer  GNOME_ICON_HEIGHT          = 24;
-    static final Integer  GNOME_ICON_WIDTH           = 24;
-    static final Insets   GNOME_IMAGE_MARGIN_INSETS   = new Insets(1, 10, 1, 1);
+    static final Insets   GNOME_IMAGE_MARGIN_INSETS =
+        new Insets(1, 10, 1, 1);
 
-    static final Double   DISPLAY_FONTSIZE_MAXIMUM = 65.0;
+    static final Double   DISPLAY_FONTSIZE_MAXIMUM  = 65.0;
     static final Double   DISPLAY_FONTSIZE_MINIMUM  = 10.0;
 
     static final String   APP_STATE_PREFNAME        = "App_State";
@@ -209,8 +211,12 @@ public class fxClock extends Application {
         static Button mAlarmButton;
 
     // Time label font size popup control.
+    static Alert mGeneralErrorAlert;
+        Label mGeneralErrorMessage;
+
     static Alert mTimeBoxFontAlert;
         static Slider mTimeBoxFontSlider;
+
     static Alert mDateBoxFontAlert;
         static Slider mDateBoxFontSlider;
 
@@ -230,12 +236,13 @@ public class fxClock extends Application {
 
         mNewApplicationIcon = createApplicationIcon();
         setApplicationIcon(mApplication);
-        mAlarmAudioClip = createAlarmAudioClip();
 
         restoreApplicationProperties(mApplication);
 
         mApplication.setScene(new Scene(createApplicationScene(),
             WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT));
+
+        mAlarmAudioClip = createAlarmAudioClip();
 
         createApplicationPropertyListeners(mApplication);
 
@@ -244,6 +251,9 @@ public class fxClock extends Application {
             public void handle(WindowEvent e) {
                 if (getAppState() == APPSTATE.SETTING_ALARM) {
                     mAlarmDialog.close();
+                }
+                if (mGeneralErrorAlert != null) {
+                    mGeneralErrorAlert.close();
                 }
                 if (mTimeBoxFontAlert != null) {
                     mTimeBoxFontAlert.close();
@@ -363,11 +373,12 @@ public class fxClock extends Application {
 
         // Set the new one.
         try {
-            mApplicationIcon = SwingFXUtils.toFXImage(mNewApplicationIcon, null);
+            mApplicationIcon = SwingFXUtils.toFXImage(
+                mNewApplicationIcon, null);
             app.getIcons().add(mApplicationIcon);
         } catch (Exception e) {
-            System.out.println(
-                "fxClock: setApplicationIcon() Setting window icon fails: \n" + e);
+            System.out.println("fxClock: setApplicationIcon() " +
+                "Setting window icon fails: \n" + e);
         }
     }
 
@@ -376,18 +387,35 @@ public class fxClock extends Application {
      **/
     public Clip createAlarmAudioClip() {
         Clip alarmAudioClip = null;
-
         try {
             alarmAudioClip = AudioSystem.getClip();
             alarmAudioClip.open(AudioSystem.getAudioInputStream(
                 new File(ALARM_SOUND_FOR_APP)));
+            return alarmAudioClip;
+
         } catch (IOException | LineUnavailableException |
-                 UnsupportedAudioFileException e) {
-            System.out.println(
-                "fxClock: start() Alarm beep audio sound is unavailable.");
+                 UnsupportedAudioFileException error) {
+            System.out.println("fxClock: start() Alarm beep " + 
+                "audio sound is unavailable.");
+            mGeneralErrorMessage = new Label(error.toString());
         }
 
-        return alarmAudioClip;
+        // Display error in an Alert box.
+        mGeneralErrorAlert = new Alert(AlertType.CONFIRMATION);
+
+        mGeneralErrorAlert.setTitle("Alarm Sound Load Error");
+        mGeneralErrorAlert.setHeaderText(null);
+        mGeneralErrorAlert.setGraphic(null);
+        mGeneralErrorAlert.getDialogPane().setContent(
+            mGeneralErrorMessage);
+
+        mGeneralErrorAlert.initOwner(mApplication.
+            getScene().getWindow());
+        mGeneralErrorAlert.initModality(Modality.APPLICATION_MODAL);
+
+        Optional<ButtonType> result =
+            mGeneralErrorAlert.showAndWait();
+        return null;
     }
 
     /** *********************************************************************
