@@ -11,13 +11,22 @@ JFLAGS = \
 
 JRUNTIME = java
 
+JAVAC = $(shell type javac | egrep "^javac")
+
 # ****************************************************
 # Targets needed to build the executable from the source folder.
 
 fxClock: fxClock.java
-	@echo
-	@echo "Build starts ..."
-	@echo
+ifeq ($(JAVAC),)
+	@echo "Error! The openjdk package is not installed, but is required to compile."
+	@echo ""
+	@echo "   Try 'apt-file search bin/javac', then sudo apt install the highest"
+	@echo "   displayed headless package availble to you."
+	@echo ""
+	@echo "   for example 'sudo apt install openjdk-21-jdk-headless'."
+	@echo ""
+	@exit 1
+endif
 
 	@if [ ! -d $(OPENJFX) ]; then \
 		echo "Error! The openjfx package is not installed, but is required."; \
@@ -25,6 +34,10 @@ fxClock: fxClock.java
 		echo ""; \
 		exit 1; \
 	fi
+
+	@echo
+	@echo "Build starts ..."
+	@echo
 
 	$(JCOMPILER) $(JFLAGS) fxClock.java LocalDateTimePicker.java LocalDateTimePickerSkin.java CalendarPicker.java DateTimeToCalendarHelper.java CalendarPickerControlSkin.java \
 		CssMetaDataForSkinProperty.java SimpleDateFormatConverter.java CalendarPickerControlSkin.java CalendarTimePicker.java CalendarTimePickerSkin.java \
@@ -89,9 +102,6 @@ endif
 	cp 'fxclock.png' /usr/share/icons/hicolor/48x48/apps/
 	@echo
 
-	sudo -u ${SUDO_USER} \
-		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
-
 	@echo
 	@echo "Install Done !"
 	@echo
@@ -122,9 +132,6 @@ endif
 	rm -f /usr/share/icons/hicolor/48x48/apps/fxclock.png
 	@echo
 
-	sudo -u ${SUDO_USER} \
-		rm -rf /home/${SUDO_USER}/.java/.userPrefs/fxClock
-
 	@echo
 	@echo "Uninstall Done !"
 	@echo
@@ -138,8 +145,6 @@ clean:
 	@echo
 
 	rm -f *.class
-
-	rm -rf ~/.java/.userPrefs/fxClock
 
 	@echo
 	@echo "Clean Done !"
