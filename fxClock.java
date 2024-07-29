@@ -22,15 +22,21 @@ import java.util.TimerTask;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+
 import javafx.embed.swing.SwingFXUtils;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -38,21 +44,27 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
 import javafx.scene.paint.Color;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.text.Font;
+
 import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+
 import javafx.util.converter.LocalDateTimeStringConverter;
 
 import javax.sound.sampled.AudioSystem;
@@ -257,6 +269,7 @@ public class fxClock extends Application {
                 }
                 if (mTimeBoxFontAlert != null) {
                     mTimeBoxFontAlert.close();
+                    mTimeBoxFontAlert = null;
                 }
                 if (mDateBoxFontAlert != null) {
                     mDateBoxFontAlert.close();

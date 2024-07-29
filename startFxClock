@@ -1,15 +1,41 @@
 #!/bin/bash
 
+# Minor styling.
+COLOR_RED="\033[0;31m"
+COLOR_GREEN="\033[1;32m"
+COLOR_YELLOW="\033[1;33m"
+COLOR_BLUE="\033[1;34m"
+COLOR_NORMAL="\033[0m"
+
+
 # Kill all fxClock Java apps I've started.
 stopFxClock
 
 # Launch fxClock Java app by desktop.
+
+# Are we KDE ?
 if [[ $XDG_SESSION_DESKTOP == "KDE" ]]; then
-    kioclient exec /usr/share/applications/fxclock.desktop 1>/dev/null 2>/dev/null
+    kioclient exec /usr/share/applications/fxclock.desktop
     exit
 fi
 
-# Else assume gtk launch.
-# if [[ $XDG_SESSION_DESKTOP == "ubuntu:GNOME" ]]; then
+# Are we GTK ?
+if [[ $XDG_SESSION_DESKTOP == "ubuntu:GNOME" ]]; then
     gtk-launch fxclock.desktop
-# fi
+    exit
+fi
+
+# Are we xfce ?
+IS_EXO_OPEN_AVAILABLE=$(type exo-open \
+    1>/dev/null 2>/dev/null; echo $?)
+
+if [[ $IS_EXO_OPEN_AVAILABLE == "0" ]]; then
+    exo-open /usr/share/applications/fxclock.desktop
+    exit
+fi
+
+# Are we default?
+echo -e "$COLOR_RED""startFxClock: Can't launch:\n"\
+    "/usr/share/applications/fxclock.desktop.\n"\
+    "For this desktop manager:""$COLOR_YELLOW"\
+    ""$XDG_SESSION_DESKTOP".\n""$COLOR_NORMAL"
