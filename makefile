@@ -11,7 +11,7 @@ JFLAGS = \
 
 JRUNTIME = java
 
-JAVAC = $(shell type javac | egrep "^javac")
+JAVAC = $(shell type javac 2>/dev/null | egrep "^javac")
 
 # ****************************************************
 # Targets needed to build the executable from the source folder.

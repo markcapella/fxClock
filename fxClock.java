@@ -469,7 +469,8 @@ public class fxClock extends Application {
         timeDateBox.setAlignment(Pos.CENTER);
 
         // Add Icon to Window contents as GNOME doesn't use it in the titlebar.
-        if (System.getenv("XDG_SESSION_DESKTOP").contains("GNOME")) {
+        if (System.getenv("XDG_SESSION_DESKTOP").toLowerCase().
+            contains("gnome")) {
             if (mGnomeImageView != null) {
                 timeDateBox.getChildren().remove(mGnomeImageView);
             }
