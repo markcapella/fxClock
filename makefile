@@ -5,28 +5,27 @@
 OPENJFX = /usr/share/openjfx/lib
 
 JCOMPILER = javac
+JAVAC = $(shell which javac)
 JFLAGS = \
 	--module-path $(OPENJFX) \
 	--add-modules javafx.controls,javafx.swing,javafx.media
 
 JRUNTIME = java
 
-JAVAC = $(shell type javac 2>/dev/null | egrep "^javac")
-
 # ****************************************************
 # Targets needed to build the executable from the source folder.
 
 fxClock: fxClock.java
-ifeq ($(JAVAC),)
-	@echo "Error! The openjdk package is not installed, but is required to compile."
-	@echo ""
-	@echo "   Try 'apt-file search bin/javac', then sudo apt install the highest"
-	@echo "   displayed headless package availble to you."
-	@echo ""
-	@echo "   for example 'sudo apt install openjdk-21-jdk-headless'."
-	@echo ""
-	@exit 1
-endif
+	@if [ -z $(JAVAC) ]; then \
+		echo "Error! The openjdk package is not installed, but is required to compile."; \
+		echo ""; \
+		echo "   Try 'apt-file search bin/javac', then sudo apt install the highest"; \
+		echo "   displayed headless package availble to you."; \
+		echo ""; \
+		echo "   for example 'sudo apt install openjdk-21-jdk-headless'."; \
+		echo ""; \
+		exit 1; \
+	fi
 
 	@if [ ! -d $(OPENJFX) ]; then \
 		echo "Error! The openjfx package is not installed, but is required."; \
