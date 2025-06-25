@@ -1,7 +1,7 @@
-// *********************************************************************
-// *** fxClock JavaFX Application                                    ***
-// *********************************************************************
 
+/** ***********************************************************
+ ** fxClock JavaFX Application.
+ **/
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -73,9 +73,9 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.LineUnavailableException;
 
 
-// *********************************************************************
-// *** fxClock JavaFX Application                                    ***
-// *********************************************************************
+/** ***********************************************************
+ ** fxClock JavaFX Application.
+ **/
 
 public class fxClock extends Application {
     // All app static finals.
@@ -169,11 +169,10 @@ public class fxClock extends Application {
             "rgba(0, 0, 0, 0.6), 5, 0.0, 0, 1);";
 
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Global App State Enums.
      **/
     enum APPSTATE {
-        NEVER_ACTIVE("NEVER_ACTIVE"),
         ALARM_NOT_SET("ALARM_NOT_SET"),
         SETTING_ALARM("SETTING_ALARM"),
         ALARM_SET("ALARM_SET"),
@@ -202,12 +201,13 @@ public class fxClock extends Application {
         }
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Global App var.
      **/
     static boolean mShutdownNormal = false;
     static final Timer mSecondTimer = new Timer();
-    static final Preferences mPref = Preferences.userRoot().node(WINDOW_TITLE);
+    static final Preferences mPref =
+        Preferences.userRoot().node(WINDOW_TITLE);
     static Clip mAlarmAudioClip;
 
     // Main fxClock UI frame.
@@ -238,7 +238,7 @@ public class fxClock extends Application {
         static LocalDateTimePicker mAlarmPicker;
 
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Main Start stage. Set title, icon, etc.
      **/
     @Override
@@ -286,7 +286,7 @@ public class fxClock extends Application {
         startSecondTimer(mApplication);
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Main Stop for normal app close.
      **/
     @Override
@@ -297,7 +297,7 @@ public class fxClock extends Application {
         mSecondTimer.cancel();
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Creates resource of clock face with current time.
      **/
     public BufferedImage createApplicationIcon() {
@@ -374,7 +374,7 @@ public class fxClock extends Application {
         return SwingFXUtils.fromFXImage((Image) writableImage, null);
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Helper method, loads Window Icon from where we've
      * Created resource of clock face with current time.
      **/
@@ -395,7 +395,7 @@ public class fxClock extends Application {
         }
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Load audio clip for alarm.
      **/
     public Clip createAlarmAudioClip() {
@@ -431,7 +431,7 @@ public class fxClock extends Application {
         return null;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Restore window property changes @ app start / restart.
      **/
     public void restoreApplicationProperties(Stage app) {
@@ -444,7 +444,7 @@ public class fxClock extends Application {
         app.setAlwaysOnTop(getWindowOnTopValue());
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Create main Form / display scene ... Date/time and alarm button.
      **/
     public VBox createApplicationScene() {
@@ -462,7 +462,7 @@ public class fxClock extends Application {
         return sceneBox;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Update Time/date box for application scene.
      **/
     public HBox updateTimeDateBox(HBox timeDateBox) {
@@ -541,7 +541,7 @@ public class fxClock extends Application {
         return timeDateBox;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Get new Alarm Button for application scene box.
      **/
     public Button createAlarmButton() {
@@ -572,7 +572,7 @@ public class fxClock extends Application {
                 alarmButton.setStyle(ALARM_BUTTON_RINGING_STYLE);
                 alarmButton.setText(getStyledAlarmString(getAlarmValue()));
                 if (mAlarmAudioClip != null) {
-                    if (mAlarmAudioClip.isRunning() == false) {
+                    if (!mAlarmAudioClip.isRunning()) {
                         mAlarmAudioClip.loop(Clip.LOOP_CONTINUOUSLY);
                     }
                 }
@@ -582,7 +582,7 @@ public class fxClock extends Application {
         return alarmButton;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Alarm button on clicked().
      **/
     public void onAlarmButtonClicked() {
@@ -625,7 +625,7 @@ public class fxClock extends Application {
         }
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * NewFontDialogs are used to change field font sizes.
      **/
     public Alert createNewFontDialog(String title, Double fontSize) {
@@ -645,7 +645,7 @@ public class fxClock extends Application {
         return fontAlert;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Capture application property changes for restart.
      **/
     public void createApplicationPropertyListeners(Stage app) {
@@ -678,7 +678,7 @@ public class fxClock extends Application {
             }});
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Application shutdown hook executes after either/or ;
      *     A)   Normal app shutdown & we've executed stop()
      *     B) Abnormal app shutdown (proc kill) & we've NOT executed stop()
@@ -706,7 +706,7 @@ public class fxClock extends Application {
         });
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Alarm Dialog to set & edit Alarm date / time.
      **/
     public Alert createAlarmDialog() {
@@ -747,7 +747,7 @@ public class fxClock extends Application {
         return alert;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Get new Alarm Edit box for Alarm Dialog.
      **/
     public VBox createAlarmEditBox(LocalDateTimePicker alarmPicker) {
@@ -760,7 +760,7 @@ public class fxClock extends Application {
         return alarmEditBox;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Application main timer, once per second.
      *     Alarm trigger is checked each second immediately.
      *     Clock image for icons updates each new minute.
@@ -796,7 +796,7 @@ public class fxClock extends Application {
                             }
                         });
                         if (mAlarmAudioClip != null) {
-                            if (mAlarmAudioClip.isRunning() == false) {
+                            if (!mAlarmAudioClip.isRunning()) {
                                 mAlarmAudioClip.loop(Clip.LOOP_CONTINUOUSLY);
                             }
                         }
@@ -806,7 +806,7 @@ public class fxClock extends Application {
         }, 0, 1000 /* per-second */);
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Helper methods ... all Preferences getter / setters.
      **/
     public APPSTATE getAppState() {
@@ -931,7 +931,7 @@ public class fxClock extends Application {
         }
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Helper method to return a spacer box.
      **/
     public HBox getNewSpacer() {
@@ -941,7 +941,7 @@ public class fxClock extends Application {
         return spacerBox;
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Helper method, format number ( < 60 ) as two-digit with leading zero.
      **/
     public String getNNWithLeadZero(Integer number) {
@@ -950,7 +950,7 @@ public class fxClock extends Application {
             number.toString();
     }
 
-    /** *********************************************************************
+    /** ***********************************************************
      * Helper methods to Format LocalDateTime to String
      * and String to LocalDateTime.
      **/

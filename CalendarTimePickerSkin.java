@@ -525,8 +525,11 @@ public class CalendarTimePickerSkin extends SkinBase<CalendarTimePicker>
 		}
 
 		lStackPane.getChildren().add(lVBox);
+
 		lStackPane.getChildren().add(timeText);
-		StackPane.setAlignment(timeText, getShowTickLabels() == ShowTickLabels.YES ? Pos.CENTER : Pos.TOP_CENTER);
+		StackPane.setAlignment(timeText,
+			getShowTickLabels() == ShowTickLabels.YES ?
+				Pos.CENTER : Pos.TOP_CENTER);
 
 		getChildren().add(lStackPane);
 	}

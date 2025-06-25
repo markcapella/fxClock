@@ -12,7 +12,21 @@
 
 ## Installation
 
-###     CD into source repo.
+### Install Pre-reqs.
+
+    sudo apt install git pulseaudio openjfx openjdk-21-jdk-headless
+
+### Clone fxClock working source folder.
+
+    git clone https://github.com/markcapella/fxClock
+
+### Change into working source folder.
+
+    cd fxClock
+&nbsp;
+
+## Basic development.
+
 
     make
     make run
