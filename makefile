@@ -7,13 +7,16 @@ APP_VERSION = "2025-06-23"
 APP_AUTHOR = "Mark James Capella"
 
 # Color styling.
-COLOR_RED = \033[0;31m
-COLOR_GREEN = \033[1;32m
-COLOR_YELLOW = \033[1;33m
-COLOR_BLUE = \033[1;34m
-COLOR_NORMAL = \033[0m
+COLOR_NORMAL := $(shell tput sgr0)
 
-OPENJFX = /usr/share/openjfx/lib
+COLOR_BLACK := $(shell tput setaf 0)
+COLOR_RED := $(shell tput setaf 1)
+COLOR_GREEN := $(shell tput setaf 2)
+COLOR_YELLOW := $(shell tput setaf 3)
+COLOR_BLUE := $(shell tput setaf 4)
+COLOR_MAGENTA := $(shell tput setaf 5)
+COLOR_CYAN := $(shell tput setaf 6)
+COLOR_WHITE := $(shell tput setaf 7)
 
 JCOMPILER = javac
 JAVAC = $(shell which javac)
@@ -66,8 +69,10 @@ all:
 	fi
 
 	@echo
-	@echo "Build starts ..."
+	@echo "$(COLOR_BLUE)Build Starts.$(COLOR_NORMAL)"
 	@echo
+
+	@rm -f "BUILD_COMPLETE"
 
 	$(JCOMPILER) $(JFLAGS) fxClock.java LocalDateTimePicker.java \
 		LocalDateTimePickerSkin.java CalendarPicker.java \
@@ -79,12 +84,10 @@ all:
 		GenericLayoutConstraints.java ListSpinner.java \
 		ListSpinnerSkin.java Timer.java HBox.java VBox.java
 
-
 	@echo "true" > "BUILD_COMPLETE"
 
 	@echo
-	@echo "Build Done !"
-	@echo
+	@echo "$(COLOR_BLUE)Build Done.$(COLOR_NORMAL)"
 
 # ****************************************************
 # Target needed to run the executable from the source folder.
@@ -102,7 +105,7 @@ run:
 	fi
 
 	@echo
-	@echo "$(COLOR_BLUE)Build Starts.$(COLOR_NORMAL)"
+	@echo "$(COLOR_BLUE)Run Starts.$(COLOR_NORMAL)"
 	@echo
 
 	@if [ ! -d $(OPENJFX) ]; then \
